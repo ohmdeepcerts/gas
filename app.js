@@ -332,7 +332,7 @@ function exportCertsCSV() {
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function renderSettingsForm() {
   const s = loadSettings();
-  const fields = ['company_name', 'gas_safe_no', 'phone', 'email', 'address', 'postcode', 'ref_prefix'];
+  const fields = ['company_name', 'gas_safe_no', 'phone', 'email', 'address', 'postcode', 'ref_prefix', 'license_no', 'engineer_name'];
   fields.forEach(k => {
     const el = document.getElementById('setting_' + k);
     if (el) el.value = s[k] || '';
@@ -344,19 +344,30 @@ function renderSettingsForm() {
   if (zone && preview && logo) {
     preview.src = logo;
     zone.classList.add('has-logo');
-    zone.querySelector('.settings-logo-text').textContent = 'Logo uploaded — click to change';
+    const txt = zone.querySelector('.settings-logo-text');
+    if (txt) txt.textContent = 'Logo uploaded — click to change';
+  }
+  // Engineer sig preview
+  const sigZone = document.getElementById('settingsSigZone');
+  const sigPrev = document.getElementById('settingsSigPreview');
+  const sigTxt  = document.getElementById('settingsSigText');
+  if (sigZone && sigPrev && s.engineer_sig) {
+    sigPrev.src = s.engineer_sig;
+    sigZone.classList.add('has-sig');
+    if (sigTxt) sigTxt.style.display = 'none';
   }
 }
 
 function saveSettingsForm() {
   const s = {};
-  ['company_name', 'gas_safe_no', 'phone', 'email', 'address', 'postcode', 'ref_prefix'].forEach(k => {
+  ['company_name', 'gas_safe_no', 'phone', 'email', 'address', 'postcode', 'ref_prefix', 'license_no', 'engineer_name'].forEach(k => {
     const el = document.getElementById('setting_' + k);
     if (el) s[k] = el.value.trim();
   });
-  // Carry over logo from existing settings or logo localStorage key
+  // Carry over logo + engineer sig from existing settings
   const existing = loadSettings();
-  s.logo = existing.logo || localStorage.getItem('cp12_v5_logo') || '';
+  s.logo         = existing.logo         || localStorage.getItem('cp12_v5_logo') || '';
+  s.engineer_sig = existing.engineer_sig || '';
   saveSettings(s);
   // Sync to cp12 form fields too
   syncSettingsToForm(s);
@@ -375,12 +386,14 @@ function saveSettingsForm() {
 
 function syncSettingsToForm(s) {
   const map = {
-    company_name: 'company_name',
-    gas_safe_no:  'gas_safe_no',
-    phone:        'business_phone',
-    email:        'business_email',
-    address:      'business_address',
-    postcode:     'business_postcode',
+    company_name:  'company_name',
+    gas_safe_no:   'gas_safe_no',
+    phone:         'business_phone',
+    email:         'business_email',
+    address:       'business_address',
+    postcode:      'business_postcode',
+    engineer_name: 'issuer_name',
+    license_no:    'landlord_ref',
   };
   Object.entries(map).forEach(([sk, fk]) => {
     if (s[sk]) {
@@ -389,6 +402,23 @@ function syncSettingsToForm(s) {
       localStorage.setItem('cp12_v5_' + fk, s[sk]);
     }
   });
+  // Apply engineer signature to sig_issued canvas if not already signed
+  if (s.engineer_sig) _applyEngineerSig(s.engineer_sig);
+}
+
+function _applyEngineerSig(dataUrl) {
+  const canvas = document.querySelector('.sig-canvas[data-sig-field="sig_issued"]');
+  if (!canvas) return;
+  const stored = localStorage.getItem('cp12_v5_sig_issued');
+  if (stored) return; // don't overwrite if already signed
+  const img = new Image();
+  img.onload = () => {
+    canvas.width = Math.max(canvas.width, img.naturalWidth);
+    canvas.height = Math.max(canvas.height, img.naturalHeight);
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    try { localStorage.setItem('cp12_v5_sig_issued', canvas.toDataURL('image/png')); } catch(e) {}
+  };
+  img.src = dataUrl;
 }
 
 function autoFillNewCertFromSettings() {
@@ -466,6 +496,36 @@ document.addEventListener('DOMContentLoaded', () => {
   if (settingsLogoZone && settingsLogoInput) {
     settingsLogoZone.addEventListener('click', () => settingsLogoInput.click());
     settingsLogoInput.addEventListener('change', handleSettingsLogoUpload);
+  }
+
+  // Settings engineer signature upload
+  const settingsSigZone  = document.getElementById('settingsSigZone');
+  const settingsSigInput = document.getElementById('settingsSigInput');
+  if (settingsSigZone && settingsSigInput) {
+    settingsSigZone.addEventListener('click', () => settingsSigInput.click());
+    settingsSigInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const dataUrl = ev.target.result;
+        const s = loadSettings();
+        s.engineer_sig = dataUrl;
+        saveSettings(s);
+        const prev = document.getElementById('settingsSigPreview');
+        const txt  = document.getElementById('settingsSigText');
+        const zone = document.getElementById('settingsSigZone');
+        if (prev) prev.src = dataUrl;
+        if (zone) zone.classList.add('has-sig');
+        if (txt)  txt.style.display = 'none';
+        // Clear the existing stored sig so the new one can apply
+        localStorage.removeItem('cp12_v5_sig_issued');
+        _applyEngineerSig(dataUrl);
+        const note = document.getElementById('settingsSaveNote');
+        if (note) { note.classList.add('show'); setTimeout(() => note.classList.remove('show'), 2500); }
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   // Route on load

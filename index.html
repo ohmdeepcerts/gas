@@ -155,8 +155,8 @@
                   <input type="text" data-field="cert_date" class="fast-date" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off">
                 </div>
                 <div class="top-item">
-                  <label>Landlord Ref</label>
-                  <input type="text" data-field="landlord_ref" placeholder="Optional ref" autocomplete="off">
+                  <label>Licence No.</label>
+                  <input type="text" data-field="landlord_ref" placeholder="Licence No." autocomplete="off">
                 </div>
                 <div class="top-item gas-number-item">
                   <label>Gas Safe<br>Reg No.</label>
@@ -169,7 +169,7 @@
               </div>
               <div class="title-box">
                 <input type="text" data-field="company_name" class="company-input" placeholder="Your Company Name Ltd" autocomplete="off" maxlength="80">
-                <div class="doctitle">Gas Safety Record &mdash; CP12</div>
+                <div class="doctitle">Landlord/Homeowner Gas Safety Record</div>
               </div>
             </div>
           </div>
@@ -268,19 +268,19 @@
                 <div class="sig-inner">
                   <div class="sig-inner-title">Record issued by the engineer:</div>
                   <div class="sig-field">
-                    <label>Signature <button type="button" class="sig-clear-btn no-print" onclick="clearSigCanvas('sig_issued')">&#10005; Clear</button></label>
-                    <canvas class="sig-canvas" data-sig-field="sig_issued" width="400" height="96" aria-label="Engineer signature pad"></canvas>
+                    <label>Signature <span class="sig-tap-hint no-print">(tap to sign)</span></label>
+                    <canvas class="sig-canvas" data-sig-field="sig_issued" width="400" height="96" aria-label="Engineer signature pad" style="cursor:pointer" onclick="openSigModal('sig_issued','Engineer Signature')"></canvas>
                   </div>
                   <div class="sig-field">
                     <label>Name (CAPITALS)</label>
-                    <input type="text" data-field="issuer_name" style="border:1px solid #d1d5db;border-radius:3px;padding:3px 6px;font-family:inherit;font-size:9pt;outline:none;text-transform:uppercase;">
+                    <input type="text" data-field="issuer_name" style="border:1px solid #d1d5db;border-radius:3px;padding:3px 6px;font-family:inherit;font-size:9.5pt;outline:none;text-transform:uppercase;">
                   </div>
                 </div>
                 <div class="sig-inner">
                   <div class="sig-inner-title">Record received by (tenant / landlord / homeowner / agent):</div>
                   <div class="sig-field">
-                    <label>Signature <button type="button" class="sig-clear-btn no-print" onclick="clearSigCanvas('sig_received')">&#10005; Clear</button></label>
-                    <canvas class="sig-canvas" data-sig-field="sig_received" width="400" height="96" aria-label="Recipient signature pad"></canvas>
+                    <label>Signature <span class="sig-tap-hint no-print">(tap to sign)</span></label>
+                    <canvas class="sig-canvas" data-sig-field="sig_received" width="400" height="96" aria-label="Recipient signature pad" style="cursor:pointer" onclick="openSigModal('sig_received','Recipient Signature')"></canvas>
                   </div>
                   <div class="sig-field">
                     <label>Name (CAPITALS)</label>
@@ -315,22 +315,22 @@
             </div>
           </div>
           <div class="p2-column-header">
-            <div class="p2-head-cell">#</div>
+            <div class="p2-head-cell">Appliance No.</div>
             <div class="p2-head-cell">Location</div>
             <div class="p2-head-cell">Type</div>
-            <div class="p2-head-cell">Make</div>
+            <div class="p2-head-cell">Manufacturer</div>
             <div class="p2-head-cell">Model</div>
-            <div class="p2-head-cell">Ownership</div>
-            <div class="p2-head-cell">Flue Type</div>
-            <div class="p2-head-cell important">Gas Tight</div>
-            <div class="p2-head-cell important">Burner Pressure / Heat Input</div>
-            <div class="p2-head-cell important">Combustion</div>
-            <div class="p2-head-cell important">Visual Condition</div>
-            <div class="p2-head-cell important">Flue Flow / Products Dispose</div>
-            <div class="p2-head-cell important">Ventilation</div>
-            <div class="p2-head-cell important">Safety Device Correct</div>
-            <div class="p2-head-cell important">Safe to Use</div>
-            <div class="p2-head-cell">Engineer Inspection No.</div>
+            <div class="p2-head-cell">Owned by Landlord / Homeowner?</div>
+            <div class="p2-head-cell">Inspected?</div>
+            <div class="p2-head-cell">Type of Flue</div>
+            <div class="p2-head-cell important">Operating Pressure (mbar) / Heat Input</div>
+            <div class="p2-head-cell important">Safety Device(s) Op.</div>
+            <div class="p2-head-cell important">Ventilation Safety Checks</div>
+            <div class="p2-head-cell important">Visual Condition of Flue &amp; Termination</div>
+            <div class="p2-head-cell important">Flue Operation Check</div>
+            <div class="p2-head-cell important">Combustion Analyser Reading</div>
+            <div class="p2-head-cell important">Serviced?</div>
+            <div class="p2-head-cell important">Safe to Use?</div>
           </div>
           <div class="appliance-cards" id="applianceCards"></div>
         </div><!-- /page2 -->
@@ -398,6 +398,31 @@
                 <div class="settings-label">Email</div>
                 <input class="settings-input" id="setting_email" type="email" placeholder="info@company.co.uk" autocomplete="off">
               </div>
+              <div class="settings-field">
+                <div class="settings-label">Licence Number</div>
+                <input class="settings-input" id="setting_license_no" type="text" placeholder="Landlord / property licence no." autocomplete="off">
+                <div class="settings-hint">Auto-fills the Licence No. field on every new certificate.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-head">Engineer Details</div>
+            <div class="settings-section-body">
+              <div class="settings-field">
+                <div class="settings-label">Engineer Name</div>
+                <input class="settings-input" id="setting_engineer_name" type="text" placeholder="ENGINEER FULL NAME" autocomplete="off" style="text-transform:uppercase">
+                <div class="settings-hint">Auto-fills the engineer name on every new certificate.</div>
+              </div>
+              <div class="settings-field">
+                <div class="settings-label">Engineer Signature</div>
+                <div class="settings-sig-zone" id="settingsSigZone" title="Click to upload signature image">
+                  <div class="settings-sig-text" id="settingsSigText">Click to upload signature<br><span style="font-size:9px;color:#94a3b8">PNG, JPG &middot; transparent background preferred</span></div>
+                  <img class="settings-sig-preview" id="settingsSigPreview" src="" alt="Signature preview">
+                </div>
+                <input type="file" id="settingsSigInput" accept="image/*" style="display:none">
+                <div class="settings-hint">Auto-applied to the engineer signature box on every new certificate.</div>
+              </div>
             </div>
           </div>
 
@@ -424,8 +449,8 @@
             <div class="settings-section-head">Business Address</div>
             <div class="settings-section-body">
               <div class="settings-field">
-                <div class="settings-label">Address</div>
-                <input class="settings-input" id="setting_address" type="text" placeholder="Unit 1, Business Park" autocomplete="off">
+                <div class="settings-label">Address <span style="font-size:10px;color:#94a3b8;font-weight:400">(Enter for new line)</span></div>
+                <textarea class="settings-input settings-textarea" id="setting_address" placeholder="Unit 1, Business Park&#10;Town&#10;County" rows="3" autocomplete="off"></textarea>
               </div>
               <div class="settings-field">
                 <div class="settings-label">Postcode</div>
@@ -465,6 +490,20 @@
     if (mEl) mEl.textContent = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
   });
 </script>
+
+<!-- ── Signature Modal ───────────────────────────────────────────────── -->
+<div id="sigModal" class="sig-modal no-print" role="dialog" aria-modal="true">
+  <div class="sig-modal-box">
+    <div class="sig-modal-title" id="sigModalTitle">Signature</div>
+    <div class="sig-modal-hint">Draw your signature below</div>
+    <canvas id="sigModalCanvas" width="700" height="220"></canvas>
+    <div class="sig-modal-actions">
+      <button class="btn-app-secondary" onclick="clearSigModal()">&#10005; Clear</button>
+      <button class="btn-app-secondary" onclick="closeSigModal()">Cancel</button>
+      <button class="btn-app-primary" onclick="confirmSigModal()">&#10003; Done</button>
+    </div>
+  </div>
+</div>
 
 <script src="jspdf.umd.min.js"></script>
 <script src="cp12.js"></script>

@@ -435,7 +435,7 @@ body {
   padding: 0 8px;
 }
 .defects-split-header .defects-heading { grid-column: 1 / 3; justify-content: flex-start; text-align: left; padding-left: 5px; }
-.defects-split-header .warn-heading { grid-column: 3; justify-content: center; text-align: center; border-left: 1px solid rgba(255,255,255,.6); font-size: 6.4pt; line-height: 1.05; padding-left: 3px; padding-right: 3px; }
+.defects-split-header .warn-heading { grid-column: 3; justify-content: center; text-align: center; border-left: 2px solid rgba(255,255,255,.85); font-size: 6.4pt; line-height: 1.05; padding-left: 3px; padding-right: 3px; background: rgba(245,158,11,.22); }
 
 .pipe-split-header {
   display: grid !important;
@@ -470,6 +470,8 @@ body {
 .choice-cycle[data-current="N/A"] { background: #1e3a5f; border-color: #1e3a5f; color: #fff; font-size: 7pt; }
 .choice-cycle[data-current="Yes"] { background: #f0fdf4; border-color: #86c99a; color: #16a34a; font-size: 7pt; }
 .choice-cycle[data-current="No"] { background: #fef2f2; border-color: #f0a4a4; color: #dc2626; font-size: 7pt; }
+.choice-cycle[data-current="Pass"] { background: #f0fdf4; border-color: #86c99a; color: #16a34a; font-size: 7pt; font-weight: 800; }
+.choice-cycle[data-current="Fail"] { background: #fef2f2; border-color: #f0a4a4; color: #dc2626; font-size: 7pt; font-weight: 800; }
 .pipe-choice .choice-cycle { min-width: 34px; }
 
 @media print {
@@ -607,7 +609,7 @@ body {
   justify-content: center;
 }
 .attention-box {
-  border: 2px solid #111827;
+  border: 3px solid #111827;
   border-radius: 0;
   width: 170px;
   max-width: 100%;

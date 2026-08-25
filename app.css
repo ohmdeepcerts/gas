@@ -664,6 +664,71 @@ html, body {
 .ac-addr-line { font-size: 10.5px; font-weight: 600; color: #1e3a5f; }
 .ac-addr-pc   { font-size: 10px; color: #64748b; margin-top: 1px; }
 
+/* ── SIGNATURE MODAL ─────────────────────────────────────────── */
+.sig-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(15,23,42,.75);
+  align-items: center;
+  justify-content: center;
+}
+.sig-modal.open { display: flex; }
+.sig-modal-box {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px 28px 20px;
+  box-shadow: 0 32px 64px rgba(0,0,0,.4);
+  max-width: 760px;
+  width: 92%;
+}
+.sig-modal-title { font-size: 16px; font-weight: 700; color: #1e3a5f; margin-bottom: 4px; }
+.sig-modal-hint  { font-size: 11px; color: #64748b; margin-bottom: 12px; }
+#sigModalCanvas {
+  display: block;
+  width: 100%;
+  border: 2px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fafafa;
+  cursor: crosshair;
+  touch-action: none;
+}
+.sig-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+.sig-tap-hint { font-size: 8pt; color: #94a3b8; font-weight: 400; text-transform: none; margin-left: 4px; }
+
+/* ── SETTINGS ADDITIONS ──────────────────────────────────────── */
+.settings-textarea {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.5;
+  font-family: inherit;
+}
+.settings-sig-zone {
+  position: relative;
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  background: #f8fafc;
+  transition: border-color .15s;
+}
+.settings-sig-zone:hover { border-color: #3b82f6; }
+.settings-sig-zone.has-sig { border-style: solid; border-color: #86c99a; }
+.settings-sig-text { text-align: center; font-size: 12px; color: #64748b; line-height: 1.5; }
+.settings-sig-preview {
+  display: none;
+  max-width: 100%;
+  max-height: 90px;
+  object-fit: contain;
+}
+.settings-sig-zone.has-sig .settings-sig-preview { display: block; }
+.settings-sig-zone.has-sig .settings-sig-text { display: none; }
+
 /* ── PRINT ────────────────────────────────────────────────────── */
 @media print {
   html, body { height: auto; overflow: visible; background: #fff; }

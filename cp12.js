@@ -169,25 +169,61 @@ function oneYearMinusOneDayUK(value) {
 }
 
 function attachFastDateInput(el) {
+  el.addEventListener('keydown', e => {
+    // Allow backspace/delete to remove characters cleanly
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      const pos = el.selectionStart;
+      const val = el.value;
+      // Skip over slashes when backspacing
+      if (e.key === 'Backspace' && pos > 0 && val[pos - 1] === '/') {
+        e.preventDefault();
+        const newPos = pos - 1;
+        el.value = val.slice(0, newPos) + val.slice(pos);
+        el.setSelectionRange(newPos, newPos);
+      }
+    }
+  });
   el.addEventListener('input', () => {
-    const digits = dateDigits(el.value);
+    const raw = el.value;
+    const cursorBefore = el.selectionStart;
+    // Count digits before cursor in raw string
+    const digitsBefore = raw.slice(0, cursorBefore).replace(/\D/g, '').length;
+    const digits = dateDigits(raw);
     const formatted = formatDateDigits(digits);
-    const sel = el.selectionStart;
     el.value = formatted;
+    // Find cursor position in formatted string after digitsBefore digits
+    let dCount = 0, newCursor = formatted.length;
+    for (let i = 0; i < formatted.length; i++) {
+      if (formatted[i] !== '/') { dCount++; if (dCount === digitsBefore) { newCursor = i + 1; break; } }
+    }
     if (el.dataset.field === 'cert_date') {
       const next = oneYearMinusOneDayUK(formatted);
       const nc = document.querySelector('[data-field="next_check_date"]');
       if (nc && formatted.length === 10) nc.value = next;
     }
-    try { el.setSelectionRange(sel, sel); } catch(e) {}
+    try { el.setSelectionRange(newCursor, newCursor); } catch(e) {}
     formDirty = true;
   });
 }
 
+// ── Field defaults (applied when no stored value exists) ──────────────────────
+const FIELD_DEFAULTS = (() => {
+  const d = {
+    work_details:    'N/A',
+    remedial_action: 'N/A',
+  };
+  for (let i = 1; i <= 5; i++) {
+    d['defect_' + i]      = 'N/A';
+    d['defect_warn_' + i] = 'N/A';
+    // Appliance text defaults
+    d[`app${i}_op_pressure`] = '20 mbar';
+    d[`app${i}_combustion`]  = 'N/A';
+    d[`app${i}_flue_type`]   = 'FL';
+  }
+  return d;
+})();
+
 // ── Choice cycle controls ────────────────────────────────────────────────────
-const CHOICE_DEFAULTS = {
-  safe_to_use: ['Yes', 'No', 'N/A'],
-};
 const CHOICE_STANDARD = ['✓', '✕', 'N/A'];
 
 function normaliseChoiceValue(group, value) {
@@ -250,8 +286,12 @@ function saveForm() {
 function loadForm() {
   document.querySelectorAll('[data-field]').forEach(el => {
     const key = AUTOSAVE_PREFIX + el.dataset.field;
-    const val = localStorage.getItem(key);
-    if (val !== null) el.value = val;
+    const stored = localStorage.getItem(key);
+    if (stored !== null) {
+      el.value = stored;
+    } else if (FIELD_DEFAULTS[el.dataset.field] !== undefined) {
+      el.value = FIELD_DEFAULTS[el.dataset.field];
+    }
   });
   refreshChoiceGroups();
   updateFullReference();
@@ -403,7 +443,10 @@ function clearAll() {
   if (keepLogo)    localStorage.setItem(LOGO_KEY, keepLogo);
 
   // Clear all input/textarea/hidden values
-  document.querySelectorAll('[data-field]').forEach(el => { el.value = ''; });
+  document.querySelectorAll('[data-field]').forEach(el => {
+    const def = FIELD_DEFAULTS[el.dataset.field];
+    el.value = (def !== undefined) ? def : '';
+  });
 
   // Restore company name to field
   const compEl = document.querySelector('[data-field="company_name"]');
@@ -517,6 +560,83 @@ function clearSigCanvas(fieldKey) {
   localStorage.removeItem('cp12_v5_' + fieldKey);
 }
 
+// ── Signature modal ────────────────────────────────────────────────────────────
+let _sigModalKey = null;
+let _sigModalReady = false;
+
+function openSigModal(fieldKey, titleText) {
+  _sigModalKey = fieldKey;
+  const modal  = document.getElementById('sigModal');
+  const title  = document.getElementById('sigModalTitle');
+  const canvas = document.getElementById('sigModalCanvas');
+  if (!modal || !canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const stored = localStorage.getItem('cp12_v5_' + fieldKey);
+  if (stored) {
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    img.src = stored;
+  }
+  if (title) title.textContent = titleText || 'Signature';
+  modal.classList.add('open');
+  if (!_sigModalReady) { _initSigModalCanvas(canvas); _sigModalReady = true; }
+}
+
+function _initSigModalCanvas(canvas) {
+  let drawing = false, lastX = 0, lastY = 0;
+  function pos(e) {
+    const r = canvas.getBoundingClientRect();
+    const sx = canvas.width / r.width, sy = canvas.height / r.height;
+    if (e.touches && e.touches[0]) return { x: (e.touches[0].clientX - r.left) * sx, y: (e.touches[0].clientY - r.top) * sy };
+    return { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy };
+  }
+  function onStart(e) { e.preventDefault(); drawing = true; const p = pos(e); lastX = p.x; lastY = p.y; }
+  function onMove(e) {
+    if (!drawing) return; e.preventDefault();
+    const ctx = canvas.getContext('2d'), p = pos(e);
+    ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y);
+    ctx.strokeStyle = '#111827'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+    lastX = p.x; lastY = p.y;
+  }
+  function onEnd() { drawing = false; }
+  canvas.addEventListener('mousedown', onStart);
+  canvas.addEventListener('mousemove', onMove);
+  canvas.addEventListener('mouseup', onEnd);
+  canvas.addEventListener('mouseleave', onEnd);
+  canvas.addEventListener('touchstart', onStart, { passive: false });
+  canvas.addEventListener('touchmove',  onMove,  { passive: false });
+  canvas.addEventListener('touchend',   onEnd);
+}
+
+function clearSigModal() {
+  const canvas = document.getElementById('sigModalCanvas');
+  if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function closeSigModal() {
+  const modal = document.getElementById('sigModal');
+  if (modal) modal.classList.remove('open');
+  _sigModalKey = null;
+}
+
+function confirmSigModal() {
+  const modalCanvas = document.getElementById('sigModalCanvas');
+  const fieldKey = _sigModalKey;
+  if (!modalCanvas || !fieldKey) { closeSigModal(); return; }
+  const realCanvas = document.querySelector(`.sig-canvas[data-sig-field="${fieldKey}"]`);
+  if (realCanvas) {
+    const ctx = realCanvas.getContext('2d');
+    realCanvas.width = modalCanvas.width;
+    realCanvas.height = modalCanvas.height;
+    ctx.clearRect(0, 0, realCanvas.width, realCanvas.height);
+    ctx.drawImage(modalCanvas, 0, 0);
+    try { localStorage.setItem('cp12_v5_' + fieldKey, realCanvas.toDataURL('image/png')); } catch(e) {}
+    formDirty = true;
+  }
+  closeSigModal();
+}
+
 function loadSignatures() {
   document.querySelectorAll('.sig-canvas').forEach(c => {
     const key = 'cp12_v5_' + c.dataset.sigField;
@@ -626,21 +746,14 @@ function _acHide() {
 }
 
 function applyHistoryToCard(record, card) {
-  const map = {
-    location: record.location,
-    type:     record.appType,
-    make:     record.make,
-    model:    record.model,
-    ownership:record.ownership,
-    flue_type:record.flueType,
-  };
-  Object.entries(map).forEach(([suffix, val]) => {
+  // Text fields
+  [['location', record.location], ['type', record.appType], ['make', record.make],
+   ['model', record.model], ['flue_type', record.flueType]].forEach(([suffix, val]) => {
     const el = card.querySelector(`[data-field$="_${suffix}"]`);
-    if (el && val !== undefined) {
-      el.value = val || '';
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-    }
+    if (el && val) { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })); }
   });
+  // Refresh choice-cycle buttons that have data-field (hidden inputs)
+  card.querySelectorAll('.choice-cycle').forEach(btn => refreshChoiceGroup(btn));
   formDirty = true;
   showToast('Appliance details filled');
 }
@@ -776,22 +889,22 @@ function buildSingleApplianceCard(n) {
   row.className = 'appliance-value-row';
 
   const cells = [
-    { cls: 'number-cell', html: `<input class="appliance-number-input" value="${n}" readonly tabindex="-1">` },
-    { cls: 'location',    field: `app${n}_location`,   ph: 'Location' },
-    { cls: 'type',        field: `app${n}_type`,       ph: 'Type' },
-    { cls: 'make',        field: `app${n}_make`,       ph: 'Make' },
-    { cls: 'model',       field: `app${n}_model`,      ph: 'Model' },
-    { cls: '',            field: `app${n}_ownership`,  ph: 'LL / T' },
-    { cls: '',            field: `app${n}_flue_type`,  ph: 'Flue' },
-    { cls: 'choice-cell', choice: `app${n}_gas_tight`, opts: '✓,✕,N/A' },
-    { cls: '',            field: `app${n}_burner_pressure`, ph: '' },
-    { cls: '',            field: `app${n}_combustion`,      ph: '' },
-    { cls: 'choice-cell', choice: `app${n}_visual`,    opts: '✓,✕,N/A' },
-    { cls: 'choice-cell', choice: `app${n}_flue_flow`, opts: '✓,✕,N/A' },
-    { cls: 'choice-cell', choice: `app${n}_vent`,      opts: '✓,✕,N/A' },
-    { cls: 'choice-cell', choice: `app${n}_safety_dev`,opts: '✓,✕,N/A' },
-    { cls: 'choice-cell', choice: `app${n}_safe_to_use`,opts: 'Yes,No,N/A' },
-    { cls: '',            field: `app${n}_insp_no`,    ph: '' },
+    { cls: 'number-cell', html: `<input class="appliance-number-input" value="Appliance ${n}" readonly tabindex="-1">` },
+    { cls: 'location',    field: `app${n}_location`,    ph: 'Location' },
+    { cls: 'type',        field: `app${n}_type`,        ph: 'Type' },
+    { cls: 'make',        field: `app${n}_make`,        ph: 'Manufacturer' },
+    { cls: '',            field: `app${n}_model`,       ph: 'Model' },
+    { cls: 'choice-cell', choice: `app${n}_ownership`,  opts: 'Yes,No' },
+    { cls: 'choice-cell', choice: `app${n}_inspected`,  opts: 'Yes,No' },
+    { cls: '',            field: `app${n}_flue_type`,   ph: 'FL' },
+    { cls: '',            field: `app${n}_op_pressure`, ph: '20 mbar' },
+    { cls: 'choice-cell', choice: `app${n}_safety_dev`, opts: 'Pass,Fail,N/A' },
+    { cls: 'choice-cell', choice: `app${n}_vent`,       opts: 'Pass,Fail,N/A' },
+    { cls: 'choice-cell', choice: `app${n}_visual`,     opts: 'N/A,Pass,Fail' },
+    { cls: 'choice-cell', choice: `app${n}_flue_flow`,  opts: 'N/A,Pass,Fail' },
+    { cls: '',            field: `app${n}_combustion`,  ph: 'N/A' },
+    { cls: 'choice-cell', choice: `app${n}_serviced`,   opts: 'No,Yes' },
+    { cls: 'choice-cell', choice: `app${n}_safe_to_use`,opts: 'Yes,No' },
   ];
 
   // Fields that trigger appliance history autocomplete
@@ -810,37 +923,64 @@ function buildSingleApplianceCard(n) {
     row.appendChild(td);
   });
 
-  // Attach autocomplete to identity fields after row is built
+  // Autocomplete on identity fields
   AC_FIELDS.forEach(fieldName => {
     const input = row.querySelector(`[data-field="${fieldName}"]`);
     if (input) initApplianceAutocomplete(input, card);
   });
 
+  // Smart defaults: watch type field for boiler detection
+  const typeInput = row.querySelector(`[data-field="app${n}_type"]`);
+  if (typeInput) typeInput.addEventListener('input', () => _applyBoilerDefaults(n, row));
+
   shell.appendChild(row);
   card.appendChild(shell);
 
-  // CO hanger
+  // CO alarm hanger — choice-cycle buttons with Yes/No defaults
   const co = document.createElement('div');
   co.className = 'co-hanger';
   co.innerHTML = `
     <div class="co-hanger-title">CO&nbsp;Alarm</div>
     <div class="co-mini-grid">
       <div class="co-mini">
-        <label>Present</label>
-        <select data-field="app${n}_co_present"><option value="">—</option><option>Yes</option><option>No</option><option>N/A</option></select>
+        <label>Approved CO Alarm Fitted?</label>
+        <div class="choice-group"><button type="button" class="choice-cycle" data-group="app${n}_co_present" data-options="Yes,No"></button><input type="hidden" data-field="app${n}_co_present"></div>
       </div>
       <div class="co-mini">
-        <label>Location</label>
-        <select data-field="app${n}_co_location"><option value="">—</option><option>Room</option><option>Hall</option><option>Other</option></select>
+        <label>Is CO Alarm in Date?</label>
+        <div class="choice-group"><button type="button" class="choice-cycle" data-group="app${n}_co_in_date" data-options="Yes,No"></button><input type="hidden" data-field="app${n}_co_in_date"></div>
       </div>
       <div class="co-mini">
-        <label>Tested</label>
-        <select data-field="app${n}_co_tested"><option value="">—</option><option>Yes</option><option>No</option><option>N/A</option></select>
+        <label>CO Alarm Test Satisfactory?</label>
+        <div class="choice-group"><button type="button" class="choice-cycle" data-group="app${n}_co_tested" data-options="Yes,No"></button><input type="hidden" data-field="app${n}_co_tested"></div>
       </div>
     </div>`;
   card.appendChild(co);
 
   return card;
+}
+
+function _applyBoilerDefaults(n, row) {
+  const typeEl   = row.querySelector(`[data-field="app${n}_type"]`);
+  const isBoiler = typeEl && /boiler/i.test(typeEl.value);
+
+  const flueEl = row.querySelector(`[data-field="app${n}_flue_type"]`);
+  if (flueEl && (!flueEl.value || flueEl.value === 'FL' || flueEl.value === 'RS'))
+    flueEl.value = isBoiler ? 'RS' : 'FL';
+
+  const combEl = row.querySelector(`[data-field="app${n}_combustion"]`);
+  if (combEl && (!combEl.value || combEl.value === 'N/A' || /^0\.000[89]$/.test(combEl.value)))
+    combEl.value = isBoiler ? (Math.random() < 0.5 ? '0.0008' : '0.0009') : 'N/A';
+
+  ['visual', 'flue_flow'].forEach(suffix => {
+    const btn = row.querySelector(`[data-group="app${n}_${suffix}"]`);
+    const hid = row.querySelector(`[data-field="app${n}_${suffix}"]`);
+    if (!btn || !hid) return;
+    if (!hid.value || hid.value === 'N/A' || hid.value === 'Pass') {
+      hid.value = isBoiler ? 'Pass' : 'N/A';
+      refreshChoiceGroup(btn);
+    }
+  });
 }
 
 // ── Pre-export validation (GAS-009, GAS-016) ─────────────────────────────────
@@ -978,7 +1118,10 @@ function drawStatusControl(doc, map, el) {
   const val = btn.dataset.current || '';
   if (!val || val === '—') return;
   doc.setFontSize(10);
-  const color = val === '✓' || val === 'Yes' ? [22, 163, 74] : val === '✕' || val === 'No' ? [220, 38, 38] : [30, 58, 95];
+  const green = [22, 163, 74], red = [220, 38, 38], navy = [30, 58, 95];
+  const color = (val === '✓' || val === 'Yes' || val === 'Pass') ? green
+              : (val === '✕' || val === 'No'  || val === 'Fail') ? red
+              : navy;
   doc.setTextColor(...color);
   doc.setFont('helvetica', 'bold');
   doc.text(val, r.x + r.w / 2, r.y + r.h / 2 + 1.5, { align: 'center' });
@@ -1048,7 +1191,7 @@ function drawPageTextFromDom(doc, map, pageEl) {
   });
 
   // Labels and static text
-  pageEl.querySelectorAll('label, .doctitle, .info-box-header, .work-box-header, .sig-inner-title, .attn-head, .p2-title, .p2-ref-label, .history-panel-title, .p2-head-cell, .defects-box-header span, .pipe-box-header, .remedial-box-header').forEach(el => {
+  pageEl.querySelectorAll('label, .doctitle, .info-box-header, .work-box-header, .sig-inner-title, .attn-head, .p2-title, .p2-ref-label, .p2-head-cell, .defects-box-header, .defects-warn-head th, .pipe-box-header, .remedial-box-header, .co-mini label').forEach(el => {
     if (!isPdfVisible(el)) return;
     drawDomText(doc, map, el, {});
   });
@@ -1057,12 +1200,6 @@ function drawPageTextFromDom(doc, map, pageEl) {
   pageEl.querySelectorAll('.choice-group').forEach(el => {
     if (!isPdfVisible(el)) return;
     drawStatusControl(doc, map, el);
-  });
-
-  // Select dropdowns (CO alarm)
-  pageEl.querySelectorAll('select[data-field]').forEach(el => {
-    if (!isPdfVisible(el)) return;
-    drawDomText(doc, map, el, { align: 'center' });
   });
 
   // Logo
