@@ -600,6 +600,70 @@ html, body {
 }
 .settings-save-note.show { display: flex; }
 
+/* ── DEEPCERTS GAS BRAND ─────────────────────────────────────── */
+.sb-app-name {
+  margin-bottom: 10px;
+  line-height: 1;
+}
+.sb-app-deepcerts {
+  display: block;
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(255,255,255,.85);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.sb-app-gas {
+  display: block;
+  font-size: 22px;
+  font-weight: 900;
+  color: #f59e0b;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  line-height: 1.05;
+}
+.sb-brand-divider {
+  height: 1px;
+  background: rgba(255,255,255,.12);
+  margin: 10px 0;
+}
+
+/* ── AUTOCOMPLETE DROPDOWN ────────────────────────────────────── */
+.ac-dropdown {
+  position: fixed;
+  z-index: 9999;
+  background: #fff;
+  border: 1.5px solid #3b82f6;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(15,23,42,.22);
+  max-height: 260px;
+  overflow-y: auto;
+  margin-top: 2px;
+  min-width: 200px;
+}
+.ac-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background .08s;
+}
+.ac-item:last-child { border-bottom: 0; }
+.ac-item:hover, .ac-item.focused { background: #eff6ff; }
+.ac-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+.ac-sub {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+.ac-addr-line { font-size: 10.5px; font-weight: 600; color: #1e3a5f; }
+.ac-addr-pc   { font-size: 10px; color: #64748b; margin-top: 1px; }
+
 /* ── PRINT ────────────────────────────────────────────────────── */
 @media print {
   html, body { height: auto; overflow: visible; background: #fff; }

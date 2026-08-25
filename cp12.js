@@ -533,34 +533,9 @@ function loadSignatures() {
   });
 }
 
-// ── Appliance history ─────────────────────────────────────────────────────────
+// ── Appliance history (data layer — still used by autocomplete) ───────────────
 const APPLIANCE_HISTORY_KEY = 'cp12_appliance_history_v1';
 const APPLIANCE_HISTORY_MAX = 200;
-
-let historyFilter = 'all';
-let historyTargetRow = null;
-
-function setHistoryFilter(filter, btn) {
-  historyFilter = filter;
-  document.querySelectorAll('.history-filter-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  renderApplianceHistory();
-}
-
-function openHistoryPanel() {
-  const panel = document.getElementById('applianceHistoryPanel');
-  if (panel) panel.classList.remove('is-closed');
-  document.body.classList.remove('history-panel-closed');
-  document.body.classList.add('history-panel-open');
-  renderApplianceHistory();
-}
-
-function closeHistoryPanel() {
-  const panel = document.getElementById('applianceHistoryPanel');
-  if (panel) panel.classList.add('is-closed');
-  document.body.classList.remove('history-panel-open');
-  document.body.classList.add('history-panel-closed');
-}
 
 function escapeHistoryHtml(value) {
   if (!value) return '';
@@ -626,101 +601,157 @@ function saveCurrentAppliancesToHistory(source) {
   saveApplianceHistory(records);
 }
 
-function renderApplianceHistory() {
-  const list = document.getElementById('applianceHistoryList');
-  if (!list) return;
-  let records = getApplianceHistory();
-  const search = (document.getElementById('applianceHistorySearch') || {}).value || '';
-  const query = search.trim().toLowerCase();
-  const installAddr = pdfField('install_address').toLowerCase();
-  const installPc   = pdfField('install_postcode').toLowerCase();
+// ── Autocomplete engine ───────────────────────────────────────────────────────
+let _acDropdown = null;
 
-  if (historyFilter === 'property') {
-    records = records.filter(r => {
-      const ra = (r.installAddress || '').toLowerCase();
-      const rp = (r.installPostcode || '').toLowerCase();
-      return (installAddr && ra.includes(installAddr.slice(0, 8))) ||
-             (installPc && rp === installPc);
-    });
+function _acGetOrCreate() {
+  if (!_acDropdown || !document.body.contains(_acDropdown)) {
+    _acDropdown = document.createElement('div');
+    _acDropdown.className = 'ac-dropdown';
+    _acDropdown.style.display = 'none';
+    document.body.appendChild(_acDropdown);
   }
-
-  if (query) {
-    records = records.filter(r => {
-      const blob = [r.make, r.model, r.appType, r.location, r.installAddress].join(' ').toLowerCase();
-      return blob.includes(query);
-    });
-  }
-
-  if (!records.length) {
-    list.innerHTML = `<div class="history-empty">No appliance records yet.<br><br>Save a certificate (Download PDF or Print) to add records to history.</div>`;
-    return;
-  }
-
-  const currentPc = installPc.replace(/\s+/g, '').slice(0, 4);
-
-  list.innerHTML = records.map(r => {
-    const title = [r.make, r.model].filter(Boolean).join(' — ') || r.appType || '(unnamed)';
-    const model = r.appType || '';
-    const meta  = [r.location, r.ownership, r.flueType].filter(Boolean).join(' · ');
-    const ref   = r.certRef || '';
-    const isHere = currentPc && (r.installPostcode || '').replace(/\s+/g,'').toLowerCase().startsWith(currentPc.toLowerCase());
-    const badge = isHere ? `<span class="history-property-badge">&#10003; This property</span>` : '';
-    return `<div class="history-card${isHere ? ' same-property' : ''}" data-history-id="${escapeHistoryHtml(r.id)}" onclick="applyApplianceHistoryRecord(this.dataset.historyId)">
-      <div class="history-card-title">${escapeHistoryHtml(title)}</div>
-      ${model ? `<div class="history-card-model">${escapeHistoryHtml(model)}</div>` : ''}
-      ${meta  ? `<div class="history-card-meta">${escapeHistoryHtml(meta)}</div>`  : ''}
-      ${ref   ? `<div class="history-card-ref">Ref: ${escapeHistoryHtml(ref)}</div>` : ''}
-      ${badge}
-      <button class="history-delete" onclick="event.stopPropagation();deleteHistoryRecord('${escapeHistoryHtml(r.id)}')" title="Remove from history">&times;</button>
-    </div>`;
-  }).join('');
+  return _acDropdown;
 }
 
-function applyApplianceHistoryRecord(id) {
-  const records = getApplianceHistory();
-  const r = records.find(rec => rec.id === id);
-  if (!r) return;
+function _acPosition(input) {
+  const r = input.getBoundingClientRect();
+  _acDropdown.style.left = r.left + 'px';
+  _acDropdown.style.top  = (r.bottom + 3) + 'px';
+  _acDropdown.style.width = Math.max(r.width, 240) + 'px';
+}
 
-  let targetCard = historyTargetRow;
-  if (!targetCard) {
-    // Apply to first card with empty make/model
-    const cards = document.querySelectorAll('.appliance-card');
-    for (const card of cards) {
-      const make = card.querySelector('[data-field$="_make"]');
-      if (make && !make.value.trim()) { targetCard = card; break; }
-    }
-    if (!targetCard && cards.length) targetCard = cards[0];
-  }
-  if (!targetCard) return;
+function _acHide() {
+  if (_acDropdown) _acDropdown.style.display = 'none';
+}
 
-  const fields = {
-    location: r.location,
-    type:     r.appType,
-    make:     r.make,
-    model:    r.model,
-    ownership:r.ownership,
-    flue_type:r.flueType,
+function applyHistoryToCard(record, card) {
+  const map = {
+    location: record.location,
+    type:     record.appType,
+    make:     record.make,
+    model:    record.model,
+    ownership:record.ownership,
+    flue_type:record.flueType,
   };
-
-  Object.entries(fields).forEach(([suffix, val]) => {
-    const el = targetCard.querySelector(`[data-field$="_${suffix}"]`) ||
-               targetCard.querySelector(`[data-field="${suffix}"]`);
+  Object.entries(map).forEach(([suffix, val]) => {
+    const el = card.querySelector(`[data-field$="_${suffix}"]`);
     if (el && val !== undefined) {
       el.value = val || '';
       el.dispatchEvent(new Event('input', { bubbles: true }));
     }
   });
-
-  closeHistoryPanel();
-  showToast('Appliance identity applied');
   formDirty = true;
+  showToast('Appliance details filled');
 }
 
-function deleteHistoryRecord(id) {
-  const records = getApplianceHistory();
-  const filtered = records.filter(r => r.id !== id);
-  saveApplianceHistory(filtered);
-  renderApplianceHistory();
+function initApplianceAutocomplete(input, card) {
+  input.setAttribute('autocomplete', 'off');
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    if (q.length < 2) { _acHide(); return; }
+
+    const records = getApplianceHistory();
+    const matches = records.filter(r =>
+      [r.make, r.model, r.appType, r.location]
+        .some(f => f && f.toLowerCase().includes(q))
+    ).slice(0, 8);
+
+    if (!matches.length) { _acHide(); return; }
+
+    const dd = _acGetOrCreate();
+    _acPosition(input);
+    dd.innerHTML = matches.map((r, i) => {
+      const title = [r.make, r.model].filter(Boolean).join(' — ') || r.appType || '—';
+      const sub   = [r.location, r.appType, r.flueType].filter(Boolean).join(' · ');
+      return `<div class="ac-item" data-idx="${i}">
+        <div class="ac-title">${escapeHistoryHtml(title)}</div>
+        ${sub ? `<div class="ac-sub">${escapeHistoryHtml(sub)}</div>` : ''}
+      </div>`;
+    }).join('');
+    dd.style.display = 'block';
+
+    dd.querySelectorAll('.ac-item').forEach((item, i) => {
+      item.addEventListener('mousedown', e => {
+        e.preventDefault();
+        applyHistoryToCard(matches[i], card);
+        _acHide();
+      });
+    });
+  });
+
+  input.addEventListener('blur', () => setTimeout(_acHide, 160));
+  input.addEventListener('focus', () => {
+    if (input.value.trim().length >= 2) input.dispatchEvent(new Event('input'));
+  });
+}
+
+function initAddressAutocomplete(textarea, postcodeInput) {
+  textarea.setAttribute('autocomplete', 'off');
+
+  function search() {
+    const q = textarea.value.trim().toLowerCase();
+    if (q.length < 2) { _acHide(); return; }
+
+    // Collect unique addresses from appliance history + cert archive
+    const seen = new Set();
+    const results = [];
+
+    getApplianceHistory().forEach(r => {
+      const addr = (r.installAddress || '').trim();
+      const pc   = (r.installPostcode || '').trim();
+      if (!addr || seen.has(addr.toLowerCase())) return;
+      if ((addr + ' ' + pc).toLowerCase().includes(q)) {
+        seen.add(addr.toLowerCase());
+        results.push({ address: addr, postcode: pc });
+      }
+    });
+
+    // Also search cert archive if available (from app.js)
+    if (typeof getCertArchive === 'function') {
+      getCertArchive().forEach(c => {
+        const addr = (c.installAddress || '').trim();
+        const pc   = (c.installPostcode || '').trim();
+        if (!addr || seen.has(addr.toLowerCase())) return;
+        if ((addr + ' ' + pc).toLowerCase().includes(q)) {
+          seen.add(addr.toLowerCase());
+          results.push({ address: addr, postcode: pc });
+        }
+      });
+    }
+
+    if (!results.length) { _acHide(); return; }
+
+    const dd = _acGetOrCreate();
+    _acPosition(textarea);
+    const top = results.slice(0, 6);
+    dd.innerHTML = top.map((r, i) => {
+      const firstLine = r.address.split('\n')[0].trim();
+      return `<div class="ac-item" data-idx="${i}">
+        <div class="ac-addr-line">${escapeHistoryHtml(firstLine)}</div>
+        ${r.postcode ? `<div class="ac-addr-pc">${escapeHistoryHtml(r.postcode)}</div>` : ''}
+      </div>`;
+    }).join('');
+    dd.style.display = 'block';
+
+    dd.querySelectorAll('.ac-item').forEach((item, i) => {
+      item.addEventListener('mousedown', e => {
+        e.preventDefault();
+        textarea.value = top[i].address;
+        if (postcodeInput) postcodeInput.value = top[i].postcode || '';
+        [textarea, postcodeInput].filter(Boolean).forEach(el => {
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        _acHide();
+        formDirty = true;
+      });
+    });
+  }
+
+  textarea.addEventListener('input', search);
+  textarea.addEventListener('focus', () => { if (textarea.value.trim().length >= 2) search(); });
+  textarea.addEventListener('blur', () => setTimeout(_acHide, 160));
 }
 
 // ── Build appliance cards (Page 2) ────────────────────────────────────────────
@@ -763,6 +794,9 @@ function buildSingleApplianceCard(n) {
     { cls: '',            field: `app${n}_insp_no`,    ph: '' },
   ];
 
+  // Fields that trigger appliance history autocomplete
+  const AC_FIELDS = [`app${n}_location`, `app${n}_type`, `app${n}_make`, `app${n}_model`];
+
   cells.forEach(c => {
     const td = document.createElement('div');
     td.className = 'appliance-value-cell' + (c.cls ? ' ' + c.cls : '');
@@ -774,6 +808,12 @@ function buildSingleApplianceCard(n) {
       td.innerHTML = c.html || '';
     }
     row.appendChild(td);
+  });
+
+  // Attach autocomplete to identity fields after row is built
+  AC_FIELDS.forEach(fieldName => {
+    const input = row.querySelector(`[data-field="${fieldName}"]`);
+    if (input) initApplianceAutocomplete(input, card);
   });
 
   shell.appendChild(row);
@@ -1115,6 +1155,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Signature pads
   document.querySelectorAll('.sig-canvas').forEach(initSignaturePad);
 
-  // History panel: open by default
-  openHistoryPanel();
+  // Address autocomplete
+  initAddressAutocomplete(
+    document.querySelector('[data-field="install_address"]'),
+    document.querySelector('[data-field="install_postcode"]')
+  );
+  initAddressAutocomplete(
+    document.querySelector('[data-field="landlord_address"]'),
+    document.querySelector('[data-field="landlord_postcode"]')
+  );
 });

@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gas Safety App — CP12</title>
+<title>DeepCerts Gas — CP12</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 1C13 7 9 10 10.5 16c.8 3 3 5 2.2 8C11.2 22 10 19 10 16c-3 4.5-2.5 9 0 13 1.8 2.8 4.5 4 6 4s4.2-1.2 6-4c2.5-4 3-8.5 0-13 0 3-1.2 6-2.2 8-.8-3 1.4-5 2.2-8C23 10 19 7 16 1Z' fill='%23f59e0b'/><path d='M16 10C14 14 13 17 14 20.5c.4 2 1.5 3 1.2 5C14.2 23.5 14 21 13.5 19c-1.5 2.5-1.2 5.5.5 7.5 1 1.2 2 2 2 2s1-0.8 2-2c1.7-2 1.8-5 .3-7.5-.5 2-0.7 4.5-1.5 6.5-.3-2 1-3 1.2-5C18.5 17 18 14 16 10Z' fill='%23fcd34d'/></svg>">
 <link rel="stylesheet" href="cp12.css">
 <link rel="stylesheet" href="app.css">
 </head>
@@ -14,6 +15,11 @@
   <!-- ── SIDEBAR ─────────────────────────────────────────────── -->
   <nav class="sidebar no-print">
     <div class="sb-brand">
+      <div class="sb-app-name">
+        <span class="sb-app-deepcerts">DEEPCERTS</span>
+        <span class="sb-app-gas">GAS</span>
+      </div>
+      <div class="sb-brand-divider"></div>
       <div class="sb-logo-mark" id="sbLogoMark">
         <img id="sbLogoImg" src="" alt="Logo">
         <span class="sb-logo-initials" id="sbLogoInitials">GAS</span>
@@ -132,29 +138,6 @@
       <!-- CP12 form pages scroll inside here -->
       <div class="view-body">
 
-        <!-- Appliance history panel (fixed-positioned, right side) -->
-        <aside id="applianceHistoryPanel" class="appliance-history-panel no-print">
-          <div class="history-panel-head">
-            <div>
-              <div class="history-panel-title">Appliance History</div>
-              <div class="history-panel-subtitle">Click a card to pre-fill identity fields for the selected appliance row</div>
-            </div>
-            <button class="history-close-btn" onclick="closeHistoryPanel()" title="Close">&times;</button>
-          </div>
-          <div class="history-tools">
-            <div class="history-search-wrap">
-              <input id="applianceHistorySearch" type="search" placeholder="Search make, model, location&hellip;" oninput="renderApplianceHistory()" autocomplete="off">
-            </div>
-            <div class="history-filter-row">
-              <button class="history-filter-btn active" data-filter="all" onclick="setHistoryFilter('all',this)">All</button>
-              <button class="history-filter-btn" data-filter="property" onclick="setHistoryFilter('property',this)">This property</button>
-            </div>
-            <div id="historyTargetHint" class="history-target" style="display:none"></div>
-          </div>
-          <div id="applianceHistoryList" class="history-list"></div>
-          <div class="history-footer-note">Identity fields only (location, type, make, model, ownership, flue type) are reused. Inspection results are never copied. Up to 200 records stored.</div>
-        </aside>
-        <button class="history-reopen no-print" onclick="openHistoryPanel()" title="Open appliance history">&#128203; History</button>
 
         <!-- PAGE 1 -->
         <div class="page" id="page1" data-page="1">
