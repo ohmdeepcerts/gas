@@ -1073,7 +1073,11 @@ async function downloadVectorPDF(btn) {
     const safeRef = ref.replace(/[^a-z0-9\-_]/gi, '_');
     const safeAddr = addr.replace(/\s+/g, '_');
     doc.save(`CP12_${safeRef}_${safeAddr}.pdf`);
-    showToast('PDF downloaded');
+    showToast('PDF downloaded — saved to archive');
+    // Notify app shell to archive this certificate
+    if (typeof window.onCertificateExported === 'function') {
+      window.onCertificateExported(collectFormState());
+    }
   } catch(e) {
     console.error('PDF error:', e);
     alert('PDF generation failed: ' + (e.message || e));

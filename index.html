@@ -3,310 +3,488 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gas Safety Record CP12</title>
+<title>Gas Safety App — CP12</title>
 <link rel="stylesheet" href="cp12.css">
+<link rel="stylesheet" href="app.css">
 </head>
 <body>
 
-<!-- CONTROLS -->
-<div class="controls no-print">
-  <button class="btn-download" id="quickPdfBtn" onclick="downloadVectorPDF(this)">&#11015; Download PDF</button>
-  <button class="btn-primary" onclick="saveCurrentAppliancesToHistory('print'); window.print()">&#128424; Print</button>
-  <button class="btn-secondary" onclick="clearAll()">&#128465; Clear Form</button>
-  <button class="btn-backup" onclick="exportBackup()" title="Download all data as a JSON backup">&#128190; Backup</button>
-  <button class="btn-backup" onclick="importBackup()" title="Restore from a JSON backup file">&#128228; Restore</button>
-  <button class="btn-secondary" onclick="openReferenceSettings()">Reference Settings</button>
-  <div class="hint"><b>Download PDF</b> &mdash; vector/text PDF &middot; Works offline &middot; Searchable text</div>
-</div>
+<div class="app-shell">
 
-<!-- APPLIANCE HISTORY PANEL -->
-<aside id="applianceHistoryPanel" class="appliance-history-panel no-print">
-  <div class="history-panel-head">
-    <div>
-      <div class="history-panel-title">Appliance History</div>
-      <div class="history-panel-subtitle">Click any card to pre-fill identity fields for the selected appliance row</div>
-    </div>
-    <button class="history-close-btn" onclick="closeHistoryPanel()" title="Close panel">&times;</button>
-  </div>
-  <div class="history-tools">
-    <div class="history-search-wrap">
-      <input id="applianceHistorySearch" type="search" placeholder="Search make, model, location&hellip;" oninput="renderApplianceHistory()" autocomplete="off">
-    </div>
-    <div class="history-filter-row">
-      <button class="history-filter-btn active" data-filter="all" onclick="setHistoryFilter('all', this)">All</button>
-      <button class="history-filter-btn" data-filter="property" onclick="setHistoryFilter('property', this)">This property</button>
-    </div>
-    <div id="historyTargetHint" class="history-target" style="display:none"></div>
-  </div>
-  <div id="applianceHistoryList" class="history-list"></div>
-  <div class="history-footer-note">Identity fields only (location, type, make, model, ownership, flue type) are reused. Inspection results are never copied. Up to 200 records stored.</div>
-</aside>
-<button class="history-reopen no-print" onclick="openHistoryPanel()" title="Open appliance history">&#128203; History</button>
-
-<!-- PAGE 1 -->
-<div class="page" id="page1" data-page="1">
-
-  <!-- HEADER -->
-  <div class="merged-header">
-    <div class="logo-zone" id="logoZone" onclick="document.getElementById('logoFileInput').click()" title="Click to upload company logo">
-      <img id="logoImg" src="" alt="Company logo">
-      <div class="logo-placeholder">Click to<br>add logo</div>
-      <input type="file" id="logoFileInput" accept="image/*" onchange="handleLogoUpload(event)">
-    </div>
-    <div class="header-content">
-      <div class="top-bar">
-        <div class="top-item">
-          <label>Cert Date</label>
-          <input type="text" data-field="cert_date" class="fast-date" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off">
-        </div>
-        <div class="top-item">
-          <label>Landlord Ref</label>
-          <input type="text" data-field="landlord_ref" placeholder="Optional ref" autocomplete="off">
-        </div>
-        <div class="top-item gas-number-item">
-          <label>Gas Safe<br>Reg No.</label>
-          <input type="text" data-field="gas_safe_no" placeholder="000000" maxlength="12" autocomplete="off">
-        </div>
-        <div class="top-item wide">
-          <label>Certificate Ref</label>
-          <input type="text" data-field="cert_ref" class="auto-reference" readonly tabindex="-1">
-        </div>
+  <!-- ── SIDEBAR ─────────────────────────────────────────────── -->
+  <nav class="sidebar no-print">
+    <div class="sb-brand">
+      <div class="sb-logo-mark" id="sbLogoMark">
+        <img id="sbLogoImg" src="" alt="Logo">
+        <span class="sb-logo-initials" id="sbLogoInitials">GAS</span>
       </div>
-      <div class="title-box">
-        <input type="text" data-field="company_name" class="company-input" placeholder="Your Company Name Ltd" autocomplete="off" maxlength="80">
-        <div class="doctitle">Gas Safety Record &mdash; CP12</div>
+      <div class="sb-company-name" id="sbCompanyName">Gas Safety App</div>
+      <div class="sb-gas-safe" id="sbGasSafe">Gas Safe: not set</div>
+    </div>
+
+    <div class="sb-nav">
+      <div class="sb-section-label">Main</div>
+      <a class="sb-link" data-view="dashboard" href="#dashboard">
+        <span class="sb-icon">⊞</span> Dashboard
+      </a>
+      <a class="sb-link" data-view="new" href="#new">
+        <span class="sb-icon">＋</span> New Certificate
+      </a>
+      <div class="sb-section-label">Records</div>
+      <a class="sb-link" data-view="certificates" href="#certificates">
+        <span class="sb-icon">📋</span> All Certificates
+      </a>
+      <div class="sb-section-label">System</div>
+      <a class="sb-link" data-view="settings" href="#settings">
+        <span class="sb-icon">⚙</span> Settings
+      </a>
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-renewal-badge" id="sbRenewalBadge" style="display:none" onclick="goTo('certificates')">
+        <div class="sb-renewal-label">Renewals</div>
+        <div class="sb-renewal-val" id="sbRenewalVal">—</div>
+        <div class="sb-renewal-sub" id="sbRenewalSub"></div>
       </div>
     </div>
-  </div>
+  </nav>
 
-  <!-- ADDRESS GRID -->
-  <div class="info-grid">
-    <!-- Installation address -->
-    <div class="info-box">
-      <div class="info-box-header">Installation / Property Address</div>
-      <div class="info-box-body">
-        <div class="compact-address has-copy-action">
-          <textarea data-field="install_address" class="address-main" placeholder="Property address&#10;Street&#10;Town" rows="3"></textarea>
-          <button type="button" class="copy-address-btn no-print" title="Copy to Landlord address" onclick="copyInstallationToLandlord(this)">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="5.5" y="1.5" width="9" height="11" rx="1.5"/>
-              <path d="M10.5 1.5V1a.5.5 0 00-.5-.5H2a1.5 1.5 0 00-1.5 1.5v10A.5.5 0 001 12.5h1"/>
-            </svg>
-          </button>
-          <div class="pc-line">
-            <label>Postcode</label>
-            <input type="text" data-field="install_postcode" placeholder="SW1A 2AA" autocomplete="off" maxlength="10">
-          </div>
+  <!-- ── APP MAIN ────────────────────────────────────────────── -->
+  <div class="app-main" id="appMain">
+
+    <!-- ═══════════════ VIEW: DASHBOARD ═══════════════ -->
+    <div class="view" id="view-dashboard">
+      <div class="view-head no-print">
+        <div class="view-head-left">
+          <div class="view-head-title">Dashboard</div>
+          <div class="view-head-sub" id="dashDate"></div>
+        </div>
+        <div class="view-head-actions">
+          <button class="btn-app-primary" onclick="goTo('new')">＋ New Certificate</button>
         </div>
       </div>
-    </div>
-
-    <!-- Landlord address -->
-    <div class="info-box">
-      <div class="info-box-header">Landlord / Owner / Agent Name &amp; Address</div>
-      <div class="info-box-body">
-        <div class="compact-address">
-          <textarea data-field="landlord_address" class="address-main" placeholder="Landlord name&#10;Address&#10;Town" rows="3"></textarea>
-          <div class="pc-line">
-            <label>Postcode</label>
-            <input type="text" data-field="landlord_postcode" placeholder="SW1A 2AA" autocomplete="off" maxlength="10">
+      <div class="view-body">
+        <div class="dash-stat-row">
+          <div class="dash-stat-card">
+            <div class="dash-stat-label">Total Certificates</div>
+            <div class="dash-stat-value" id="dashTotal">0</div>
+            <div class="dash-stat-delta">in archive</div>
+          </div>
+          <div class="dash-stat-card green">
+            <div class="dash-stat-label">This Month</div>
+            <div class="dash-stat-value" id="dashMonth">0</div>
+            <div class="dash-stat-delta" id="dashMonthLabel">certificates</div>
+          </div>
+          <div class="dash-stat-card amber">
+            <div class="dash-stat-label">Due Within 30 Days</div>
+            <div class="dash-stat-value" id="dashSoon">0</div>
+            <div class="dash-stat-delta warn">need renewal soon</div>
+          </div>
+          <div class="dash-stat-card red">
+            <div class="dash-stat-label">Overdue</div>
+            <div class="dash-stat-value" id="dashOverdue">0</div>
+            <div class="dash-stat-delta" style="color:#dc2626">past next-check date</div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Business details -->
-    <div class="info-box">
-      <div class="info-box-header">Gas Engineer / Business Details</div>
-      <div class="info-box-body">
-        <div class="business-grid">
-          <textarea data-field="business_address" class="business-details" placeholder="Engineer / company&#10;address" rows="3"></textarea>
-          <div class="business-phone">
-            <label>Tel</label>
-            <input type="tel" data-field="business_phone" placeholder="07700 000000" autocomplete="off">
-          </div>
-          <div class="business-email">
-            <label>Email</label>
-            <input type="email" data-field="business_email" placeholder="hello@company.co.uk" autocomplete="off">
-          </div>
-          <div class="business-postcode">
-            <label>Postcode</label>
-            <input type="text" data-field="business_postcode" placeholder="SW1A 2AA" autocomplete="off" maxlength="10">
-          </div>
+        <div class="dash-section-head">
+          <div class="dash-section-title">Recent Certificates</div>
+          <button class="btn-app-secondary" onclick="goTo('certificates')">View all →</button>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- WORK CARRIED OUT -->
-  <div class="work-box">
-    <div class="work-box-header">
-      Work Carried Out &amp; Description of Appliances/Equipment Inspected
-      <span class="work-char-count no-print" id="workCharCount"></span>
-    </div>
-    <textarea data-field="work_details" placeholder="Describe inspection, service, and testing carried out&hellip;" oninput="updateWorkCount(this)"></textarea>
-  </div>
-
-  <!-- BOTTOM SPLIT -->
-  <div class="bottom-split">
-    <div class="left-panel">
-
-      <!-- DEFECTS -->
-      <div class="defects-box">
-        <div class="info-box-header defects-box-header defects-split-header">
-          <span class="defects-heading">Defects Identified &amp; Remedial Action Required</span>
-          <span class="warn-heading">Warning Notice<br>Issued / Nature</span>
-        </div>
-        <table class="defects-table">
-          <tbody>
-            <tr><td class="num">1</td><td class="desc"><input type="text" data-field="defect_1"></td><td class="warn"><input type="text" data-field="defect_warn_1" style="width:100%;border:1px solid #e5e7eb;border-radius:3px;font-family:inherit;font-size:8pt;text-align:center;padding:2px 4px;outline:none;color:#111827;"></td></tr>
-            <tr><td class="num">2</td><td class="desc"><input type="text" data-field="defect_2"></td><td class="warn"><input type="text" data-field="defect_warn_2" style="width:100%;border:1px solid #e5e7eb;border-radius:3px;font-family:inherit;font-size:8pt;text-align:center;padding:2px 4px;outline:none;color:#111827;"></td></tr>
-            <tr><td class="num">3</td><td class="desc"><input type="text" data-field="defect_3"></td><td class="warn"><input type="text" data-field="defect_warn_3" style="width:100%;border:1px solid #e5e7eb;border-radius:3px;font-family:inherit;font-size:8pt;text-align:center;padding:2px 4px;outline:none;color:#111827;"></td></tr>
-            <tr><td class="num">4</td><td class="desc"><input type="text" data-field="defect_4"></td><td class="warn"><input type="text" data-field="defect_warn_4" style="width:100%;border:1px solid #e5e7eb;border-radius:3px;font-family:inherit;font-size:8pt;text-align:center;padding:2px 4px;outline:none;color:#111827;"></td></tr>
-            <tr><td class="num">5</td><td class="desc"><input type="text" data-field="defect_5"></td><td class="warn"><input type="text" data-field="defect_warn_5" style="width:100%;border:1px solid #e5e7eb;border-radius:3px;font-family:inherit;font-size:8pt;text-align:center;padding:2px 4px;outline:none;color:#111827;"></td></tr>
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Address</th>
+              <th>Cert Date</th>
+              <th>Next Due</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="dashRecentBody">
+            <tr><td colspan="6" style="text-align:center;padding:32px;color:#94a3b8;font-size:12px;">
+              No certificates yet. <button onclick="goTo('new')" style="border:none;background:none;color:#1e3a5f;font-weight:700;cursor:pointer;font-size:12px;">Create your first →</button>
+            </td></tr>
           </tbody>
         </table>
       </div>
+    </div>
 
-      <!-- REMEDIAL ACTION -->
-      <div class="remedial-box">
-        <div class="remedial-box-header">
-          Remedial Action Taken &amp; Result
-          <span>Optional — describe outcome of defect resolution</span>
+    <!-- ═══════════════ VIEW: NEW CERTIFICATE ═══════════════ -->
+    <div class="view" id="view-new">
+
+      <!-- Controls (replaces the old sticky bar) -->
+      <div class="view-head no-print">
+        <div class="view-head-left">
+          <div class="view-head-title">New Certificate</div>
+          <div class="view-head-sub">CP12 Gas Safety Record — A4 landscape</div>
         </div>
-        <textarea data-field="remedial_action" placeholder="Describe remedial action taken and outcome&hellip;"></textarea>
+        <div class="view-head-actions">
+          <button class="btn-app-secondary" onclick="exportBackup()" title="Download JSON backup">&#128190; Backup</button>
+          <button class="btn-app-secondary" onclick="importBackup()" title="Restore from backup">&#128228; Restore</button>
+          <button class="btn-app-secondary" onclick="clearAll()">&#128465; Clear</button>
+          <button class="btn-app-secondary" onclick="saveCurrentAppliancesToHistory('print'); window.print()">&#128424; Print</button>
+          <button class="btn-app-primary" id="quickPdfBtn" onclick="downloadVectorPDF(this)">&#11015; Download PDF</button>
+        </div>
       </div>
 
-    </div><!-- /left-panel -->
+      <!-- CP12 form pages scroll inside here -->
+      <div class="view-body">
 
-    <div class="right-panel">
+        <!-- Appliance history panel (fixed-positioned, right side) -->
+        <aside id="applianceHistoryPanel" class="appliance-history-panel no-print">
+          <div class="history-panel-head">
+            <div>
+              <div class="history-panel-title">Appliance History</div>
+              <div class="history-panel-subtitle">Click a card to pre-fill identity fields for the selected appliance row</div>
+            </div>
+            <button class="history-close-btn" onclick="closeHistoryPanel()" title="Close">&times;</button>
+          </div>
+          <div class="history-tools">
+            <div class="history-search-wrap">
+              <input id="applianceHistorySearch" type="search" placeholder="Search make, model, location&hellip;" oninput="renderApplianceHistory()" autocomplete="off">
+            </div>
+            <div class="history-filter-row">
+              <button class="history-filter-btn active" data-filter="all" onclick="setHistoryFilter('all',this)">All</button>
+              <button class="history-filter-btn" data-filter="property" onclick="setHistoryFilter('property',this)">This property</button>
+            </div>
+            <div id="historyTargetHint" class="history-target" style="display:none"></div>
+          </div>
+          <div id="applianceHistoryList" class="history-list"></div>
+          <div class="history-footer-note">Identity fields only (location, type, make, model, ownership, flue type) are reused. Inspection results are never copied. Up to 200 records stored.</div>
+        </aside>
+        <button class="history-reopen no-print" onclick="openHistoryPanel()" title="Open appliance history">&#128203; History</button>
 
-      <!-- PIPEWORK -->
-      <div class="pipe-box">
-        <div class="info-box-header pipe-box-header pipe-split-header">
-          <span>Pipework / Installation Checks</span>
-          <span class="pipe-status-heading">Status<br>&#10003; / &#10007; / N/A</span>
-        </div>
-        <table class="pipe-table">
-          <tbody>
-            <tr>
-              <td class="label">Gas Tightness Test</td>
-              <td class="check pipe-choice">
-                <div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_gas_tight" data-options="✓,✕,N/A"></button><input type="hidden" data-field="pipe_gas_tight"></div>
-              </td>
-            </tr>
-            <tr>
-              <td class="label">Standing / Working Pressure Test</td>
-              <td class="check pipe-choice">
-                <div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_pressure" data-options="✓,✕,N/A"></button><input type="hidden" data-field="pipe_pressure"></div>
-              </td>
-            </tr>
-            <tr>
-              <td class="label">Gas Installation Visual Check</td>
-              <td class="check pipe-choice">
-                <div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_visual" data-options="✓,✕,N/A"></button><input type="hidden" data-field="pipe_visual"></div>
-              </td>
-            </tr>
-            <tr>
-              <td class="label">Meter / Governor Condition</td>
-              <td class="check pipe-choice">
-                <div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_meter" data-options="✓,✕,N/A"></button><input type="hidden" data-field="pipe_meter"></div>
-              </td>
-            </tr>
-            <tr>
-              <td class="label">Emergency Control Accessible</td>
-              <td class="check pipe-choice">
-                <div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_emergency" data-options="✓,✕,N/A"></button><input type="hidden" data-field="pipe_emergency"></div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div><!-- /pipe-box -->
+        <!-- PAGE 1 -->
+        <div class="page" id="page1" data-page="1">
 
-      <!-- SIGNATURES + ATTENTION -->
-      <div class="sig-box">
-        <!-- Issued by -->
-        <div class="sig-inner">
-          <div class="sig-inner-title">Record issued by the engineer:</div>
-          <div class="sig-field">
-            <label>Signature <button type="button" class="sig-clear-btn no-print" onclick="clearSigCanvas('sig_issued')" title="Clear signature">&#10005; Clear</button></label>
-            <canvas class="sig-canvas" data-sig-field="sig_issued" width="400" height="96" aria-label="Engineer signature pad"></canvas>
-          </div>
-          <div class="sig-field">
-            <label>Name (CAPITALS)</label>
-            <input type="text" data-field="issuer_name" style="border:1px solid #d1d5db;border-radius:3px;padding:3px 6px;font-family:inherit;font-size:9pt;outline:none;text-transform:uppercase;">
-          </div>
-        </div>
-        <!-- Received by -->
-        <div class="sig-inner">
-          <div class="sig-inner-title">Record received by (tenant / landlord / homeowner / agent):</div>
-          <div class="sig-field">
-            <label>Signature <button type="button" class="sig-clear-btn no-print" onclick="clearSigCanvas('sig_received')" title="Clear signature">&#10005; Clear</button></label>
-            <canvas class="sig-canvas" data-sig-field="sig_received" width="400" height="96" aria-label="Recipient signature pad"></canvas>
-          </div>
-          <div class="sig-field">
-            <label>Name (CAPITALS)</label>
-            <input type="text" data-field="receiver_name" style="border:1px solid #d1d5db;border-radius:3px;padding:3px 6px;font-family:inherit;font-size:9pt;outline:none;text-transform:uppercase;">
-          </div>
-        </div>
-        <!-- Attention box -->
-        <div class="attention-wrap">
-          <div class="attention-box">
-            <div class="attn-head">ATTENTION</div>
-            <div class="attn-body">
-              <div>Next safety check due by:</div>
-              <input type="text" data-field="next_check_date" class="fast-date next-check-date" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off">
+          <div class="merged-header">
+            <div class="logo-zone" id="logoZone" onclick="document.getElementById('logoFileInput').click()" title="Click to upload company logo">
+              <img id="logoImg" src="" alt="Company logo">
+              <div class="logo-placeholder">Click to<br>add logo</div>
+              <input type="file" id="logoFileInput" accept="image/*" onchange="handleLogoUpload(event)">
+            </div>
+            <div class="header-content">
+              <div class="top-bar">
+                <div class="top-item">
+                  <label>Cert Date</label>
+                  <input type="text" data-field="cert_date" class="fast-date" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off">
+                </div>
+                <div class="top-item">
+                  <label>Landlord Ref</label>
+                  <input type="text" data-field="landlord_ref" placeholder="Optional ref" autocomplete="off">
+                </div>
+                <div class="top-item gas-number-item">
+                  <label>Gas Safe<br>Reg No.</label>
+                  <input type="text" data-field="gas_safe_no" placeholder="000000" maxlength="12" autocomplete="off">
+                </div>
+                <div class="top-item wide">
+                  <label>Certificate Ref</label>
+                  <input type="text" data-field="cert_ref" class="auto-reference" readonly tabindex="-1">
+                </div>
+              </div>
+              <div class="title-box">
+                <input type="text" data-field="company_name" class="company-input" placeholder="Your Company Name Ltd" autocomplete="off" maxlength="80">
+                <div class="doctitle">Gas Safety Record &mdash; CP12</div>
+              </div>
             </div>
           </div>
+
+          <div class="info-grid">
+            <div class="info-box">
+              <div class="info-box-header">Installation / Property Address</div>
+              <div class="info-box-body">
+                <div class="compact-address has-copy-action">
+                  <textarea data-field="install_address" class="address-main" placeholder="Property address&#10;Street&#10;Town" rows="3"></textarea>
+                  <button type="button" class="copy-address-btn no-print" title="Copy to Landlord address" onclick="copyInstallationToLandlord(this)">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="5.5" y="1.5" width="9" height="11" rx="1.5"/>
+                      <path d="M10.5 1.5V1a.5.5 0 00-.5-.5H2a1.5 1.5 0 00-1.5 1.5v10A.5.5 0 001 12.5h1"/>
+                    </svg>
+                  </button>
+                  <div class="pc-line">
+                    <label>Postcode</label>
+                    <input type="text" data-field="install_postcode" placeholder="SW1A 2AA" autocomplete="off" maxlength="10">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="info-box">
+              <div class="info-box-header">Landlord / Owner / Agent Name &amp; Address</div>
+              <div class="info-box-body">
+                <div class="compact-address">
+                  <textarea data-field="landlord_address" class="address-main" placeholder="Landlord name&#10;Address&#10;Town" rows="3"></textarea>
+                  <div class="pc-line">
+                    <label>Postcode</label>
+                    <input type="text" data-field="landlord_postcode" placeholder="SW1A 2AA" autocomplete="off" maxlength="10">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="info-box">
+              <div class="info-box-header">Gas Engineer / Business Details</div>
+              <div class="info-box-body">
+                <div class="business-grid">
+                  <textarea data-field="business_address" class="business-details" placeholder="Engineer / company&#10;address" rows="3"></textarea>
+                  <div class="business-phone"><label>Tel</label><input type="tel" data-field="business_phone" placeholder="07700 000000" autocomplete="off"></div>
+                  <div class="business-email"><label>Email</label><input type="email" data-field="business_email" placeholder="hello@company.co.uk" autocomplete="off"></div>
+                  <div class="business-postcode"><label>Postcode</label><input type="text" data-field="business_postcode" placeholder="SW1A 2AA" autocomplete="off" maxlength="10"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="work-box">
+            <div class="work-box-header">
+              Work Carried Out &amp; Description of Appliances/Equipment Inspected
+              <span class="work-char-count no-print" id="workCharCount"></span>
+            </div>
+            <textarea data-field="work_details" placeholder="Describe inspection, service, and testing carried out&hellip;" oninput="updateWorkCount(this)"></textarea>
+          </div>
+
+          <div class="bottom-split">
+            <div class="left-panel">
+              <div class="defects-box">
+                <div class="info-box-header defects-box-header defects-split-header">
+                  <span class="defects-heading">Defects Identified &amp; Remedial Action Required</span>
+                  <span class="warn-heading">Warning Notice<br>Issued / Nature</span>
+                </div>
+                <table class="defects-table">
+                  <tbody>
+                    <tr><td class="num">1</td><td class="desc"><input type="text" data-field="defect_1"></td><td class="warn"><input type="text" data-field="defect_warn_1" style="width:100%;border:1px solid #e5e7eb;border-radius:3px;font-family:inherit;font-size:8pt;text-align:center;padding:2px 4px;outline:none;color:#111827;"></td></tr>
+                    <tr><td class="num">2</td><td class="desc"><input type="text" data-field="defect_2"></td><td class="warn"><input type="text" data-field="defect_warn_2" style="width:100%;border:1px solid #e5e7eb;border-radius:3px;font-family:inherit;font-size:8pt;text-align:center;padding:2px 4px;outline:none;color:#111827;"></td></tr>
+                    <tr><td class="num">3</td><td class="desc"><input type="text" data-field="defect_3"></td><td class="warn"><input type="text" data-field="defect_warn_3" style="width:100%;border:1px solid #e5e7eb;border-radius:3px;font-family:inherit;font-size:8pt;text-align:center;padding:2px 4px;outline:none;color:#111827;"></td></tr>
+                    <tr><td class="num">4</td><td class="desc"><input type="text" data-field="defect_4"></td><td class="warn"><input type="text" data-field="defect_warn_4" style="width:100%;border:1px solid #e5e7eb;border-radius:3px;font-family:inherit;font-size:8pt;text-align:center;padding:2px 4px;outline:none;color:#111827;"></td></tr>
+                    <tr><td class="num">5</td><td class="desc"><input type="text" data-field="defect_5"></td><td class="warn"><input type="text" data-field="defect_warn_5" style="width:100%;border:1px solid #e5e7eb;border-radius:3px;font-family:inherit;font-size:8pt;text-align:center;padding:2px 4px;outline:none;color:#111827;"></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="remedial-box">
+                <div class="remedial-box-header">Remedial Action Taken &amp; Result<span>Optional</span></div>
+                <textarea data-field="remedial_action" placeholder="Describe remedial action taken and outcome&hellip;"></textarea>
+              </div>
+            </div>
+            <div class="right-panel">
+              <div class="pipe-box">
+                <div class="info-box-header pipe-box-header pipe-split-header">
+                  <span>Pipework / Installation Checks</span>
+                  <span class="pipe-status-heading">Status<br>&#10003; / &#10007; / N/A</span>
+                </div>
+                <table class="pipe-table">
+                  <tbody>
+                    <tr><td class="label">Gas Tightness Test</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_gas_tight" data-options="✓,✕,N/A"></button><input type="hidden" data-field="pipe_gas_tight"></div></td></tr>
+                    <tr><td class="label">Standing / Working Pressure Test</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_pressure" data-options="✓,✕,N/A"></button><input type="hidden" data-field="pipe_pressure"></div></td></tr>
+                    <tr><td class="label">Gas Installation Visual Check</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_visual" data-options="✓,✕,N/A"></button><input type="hidden" data-field="pipe_visual"></div></td></tr>
+                    <tr><td class="label">Meter / Governor Condition</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_meter" data-options="✓,✕,N/A"></button><input type="hidden" data-field="pipe_meter"></div></td></tr>
+                    <tr><td class="label">Emergency Control Accessible</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_emergency" data-options="✓,✕,N/A"></button><input type="hidden" data-field="pipe_emergency"></div></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="sig-box">
+                <div class="sig-inner">
+                  <div class="sig-inner-title">Record issued by the engineer:</div>
+                  <div class="sig-field">
+                    <label>Signature <button type="button" class="sig-clear-btn no-print" onclick="clearSigCanvas('sig_issued')">&#10005; Clear</button></label>
+                    <canvas class="sig-canvas" data-sig-field="sig_issued" width="400" height="96" aria-label="Engineer signature pad"></canvas>
+                  </div>
+                  <div class="sig-field">
+                    <label>Name (CAPITALS)</label>
+                    <input type="text" data-field="issuer_name" style="border:1px solid #d1d5db;border-radius:3px;padding:3px 6px;font-family:inherit;font-size:9pt;outline:none;text-transform:uppercase;">
+                  </div>
+                </div>
+                <div class="sig-inner">
+                  <div class="sig-inner-title">Record received by (tenant / landlord / homeowner / agent):</div>
+                  <div class="sig-field">
+                    <label>Signature <button type="button" class="sig-clear-btn no-print" onclick="clearSigCanvas('sig_received')">&#10005; Clear</button></label>
+                    <canvas class="sig-canvas" data-sig-field="sig_received" width="400" height="96" aria-label="Recipient signature pad"></canvas>
+                  </div>
+                  <div class="sig-field">
+                    <label>Name (CAPITALS)</label>
+                    <input type="text" data-field="receiver_name" style="border:1px solid #d1d5db;border-radius:3px;padding:3px 6px;font-family:inherit;font-size:9pt;outline:none;text-transform:uppercase;">
+                  </div>
+                </div>
+                <div class="attention-wrap">
+                  <div class="attention-box">
+                    <div class="attn-head">ATTENTION</div>
+                    <div class="attn-body">
+                      <div>Next safety check due by:</div>
+                      <input type="text" data-field="next_check_date" class="fast-date next-check-date" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page-footer">
+            This Gas Safety Record has been completed by a Gas Safe registered engineer. The customer / landlord / agent should retain this record and make it available to the tenant. Annual inspection is a legal requirement.
+          </div>
+        </div><!-- /page1 -->
+
+        <!-- PAGE 2 -->
+        <div class="page" id="page2" data-page="2">
+          <div class="p2-titlebar">
+            <div class="p2-title">Appliance Inspection Details</div>
+            <div class="p2-ref-group">
+              <span class="p2-ref-label">Certificate Ref:</span>
+              <div class="p2-ref-box"><input type="text" data-field="cert_ref_p2" class="auto-reference" readonly tabindex="-1"></div>
+            </div>
+          </div>
+          <div class="p2-column-header">
+            <div class="p2-head-cell">#</div>
+            <div class="p2-head-cell">Location</div>
+            <div class="p2-head-cell">Type</div>
+            <div class="p2-head-cell">Make</div>
+            <div class="p2-head-cell">Model</div>
+            <div class="p2-head-cell">Ownership</div>
+            <div class="p2-head-cell">Flue Type</div>
+            <div class="p2-head-cell important">Gas Tight</div>
+            <div class="p2-head-cell important">Burner Pressure / Heat Input</div>
+            <div class="p2-head-cell important">Combustion</div>
+            <div class="p2-head-cell important">Visual Condition</div>
+            <div class="p2-head-cell important">Flue Flow / Products Dispose</div>
+            <div class="p2-head-cell important">Ventilation</div>
+            <div class="p2-head-cell important">Safety Device Correct</div>
+            <div class="p2-head-cell important">Safe to Use</div>
+            <div class="p2-head-cell">Engineer Inspection No.</div>
+          </div>
+          <div class="appliance-cards" id="applianceCards"></div>
+        </div><!-- /page2 -->
+
+      </div><!-- /view-body -->
+    </div><!-- /view-new -->
+
+    <!-- ═══════════════ VIEW: ALL CERTIFICATES ═══════════════ -->
+    <div class="view" id="view-certificates">
+      <div class="view-head no-print">
+        <div class="view-head-left">
+          <div class="view-head-title">All Certificates</div>
+          <div class="view-head-sub" id="certsCount">0 certificates</div>
         </div>
-      </div><!-- /sig-box -->
-
-    </div><!-- /right-panel -->
-  </div><!-- /bottom-split -->
-
-  <div class="page-footer">
-    This Gas Safety Record has been completed by a Gas Safe registered engineer. The customer / landlord / agent should retain this record and make it available to the tenant. Annual inspection is a legal requirement.
-  </div>
-
-</div><!-- /page1 -->
-
-<!-- PAGE 2 -->
-<div class="page" id="page2" data-page="2">
-
-  <div class="p2-titlebar">
-    <div class="p2-title">Appliance Inspection Details</div>
-    <div class="p2-ref-group">
-      <span class="p2-ref-label">Certificate Ref:</span>
-      <div class="p2-ref-box"><input type="text" data-field="cert_ref_p2" class="auto-reference" readonly tabindex="-1"></div>
+        <div class="view-head-actions">
+          <button class="btn-app-secondary" onclick="exportCertsCSV()">&#11015; Export CSV</button>
+          <button class="btn-app-primary" onclick="goTo('new')">＋ New Certificate</button>
+        </div>
+      </div>
+      <div class="view-body">
+        <div class="certs-toolbar">
+          <input class="certs-search" id="certsSearchInput" type="search" placeholder="Search by address, reference, postcode&hellip;" autocomplete="off">
+          <button class="filter-chip active" onclick="setCertFilter('all',this)">All</button>
+          <button class="filter-chip" onclick="setCertFilter('valid',this)">Valid</button>
+          <button class="filter-chip" onclick="setCertFilter('soon',this)">Due soon</button>
+          <button class="filter-chip" onclick="setCertFilter('overdue',this)">Overdue</button>
+        </div>
+        <div class="certs-grid" id="certsGrid">
+          <div class="certs-empty"><div class="empty-icon">📋</div>No certificates yet.</div>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <div class="p2-column-header">
-    <div class="p2-head-cell">#</div>
-    <div class="p2-head-cell">Location</div>
-    <div class="p2-head-cell">Type</div>
-    <div class="p2-head-cell">Make</div>
-    <div class="p2-head-cell">Model</div>
-    <div class="p2-head-cell">Ownership</div>
-    <div class="p2-head-cell">Flue Type</div>
-    <div class="p2-head-cell important">Gas Tight</div>
-    <div class="p2-head-cell important">Burner Pressure / Heat Input</div>
-    <div class="p2-head-cell important">Combustion</div>
-    <div class="p2-head-cell important">Visual Condition</div>
-    <div class="p2-head-cell important">Flue Flow / Products Dispose</div>
-    <div class="p2-head-cell important">Ventilation</div>
-    <div class="p2-head-cell important">Safety Device Correct</div>
-    <div class="p2-head-cell important">Safe to Use</div>
-    <div class="p2-head-cell">Engineer Inspection No.</div>
-  </div>
+    <!-- ═══════════════ VIEW: SETTINGS ═══════════════ -->
+    <div class="view" id="view-settings">
+      <div class="view-head no-print">
+        <div class="view-head-left">
+          <div class="view-head-title">Settings</div>
+          <div class="view-head-sub">Company profile &amp; preferences</div>
+        </div>
+        <div class="view-head-actions">
+          <div class="settings-save-note" id="settingsSaveNote">&#10003; Settings saved</div>
+          <button class="btn-app-primary" onclick="saveSettingsForm()">Save Changes</button>
+        </div>
+      </div>
+      <div class="view-body">
+        <div class="settings-grid">
 
-  <div class="appliance-cards" id="applianceCards">
-    <!-- Appliance rows 1–5 -->
-  </div>
+          <div class="settings-section">
+            <div class="settings-section-head">Company Details</div>
+            <div class="settings-section-body">
+              <div class="settings-field">
+                <div class="settings-label">Company Name</div>
+                <input class="settings-input" id="setting_company_name" type="text" placeholder="OHM Electrical &amp; Gas Ltd" autocomplete="off">
+              </div>
+              <div class="settings-field">
+                <div class="settings-label">Gas Safe Register No.</div>
+                <input class="settings-input" id="setting_gas_safe_no" type="text" placeholder="123456" maxlength="12" autocomplete="off">
+              </div>
+              <div class="settings-field">
+                <div class="settings-label">Phone</div>
+                <input class="settings-input" id="setting_phone" type="tel" placeholder="07700 000000" autocomplete="off">
+              </div>
+              <div class="settings-field">
+                <div class="settings-label">Email</div>
+                <input class="settings-input" id="setting_email" type="email" placeholder="info@company.co.uk" autocomplete="off">
+              </div>
+            </div>
+          </div>
 
-</div><!-- /page2 -->
+          <div class="settings-section">
+            <div class="settings-section-head">Branding &amp; Logo</div>
+            <div class="settings-section-body">
+              <div class="settings-field">
+                <div class="settings-label">Company Logo</div>
+                <div class="settings-logo-zone" id="settingsLogoZone" title="Click to upload logo">
+                  <div class="settings-logo-text">Click to upload logo<br><span style="font-size:9px;color:#94a3b8">PNG or JPG &middot; max 2MB</span></div>
+                  <img class="settings-logo-preview" id="settingsLogoPreview" src="" alt="Logo preview">
+                </div>
+                <input type="file" id="settingsLogoInput" accept="image/*" style="display:none">
+              </div>
+              <div class="settings-field">
+                <div class="settings-label">Certificate Ref Prefix</div>
+                <input class="settings-input" id="setting_ref_prefix" type="text" placeholder="OHM" maxlength="20" autocomplete="off">
+                <div class="settings-hint">e.g. OHM → references will be OHM100, OHM101&hellip;</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-head">Business Address</div>
+            <div class="settings-section-body">
+              <div class="settings-field">
+                <div class="settings-label">Address</div>
+                <input class="settings-input" id="setting_address" type="text" placeholder="Unit 1, Business Park" autocomplete="off">
+              </div>
+              <div class="settings-field">
+                <div class="settings-label">Postcode</div>
+                <input class="settings-input" id="setting_postcode" type="text" placeholder="BN21 3HH" maxlength="10" autocomplete="off">
+              </div>
+              <div class="settings-hint">These details auto-fill the Business Details box on every new certificate.</div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-head">Data Management</div>
+            <div class="settings-section-body">
+              <div class="settings-data-row">
+                <button class="btn-app-secondary" onclick="exportBackup()">&#128190; Export All Data (JSON)</button>
+                <button class="btn-app-secondary" onclick="importBackup()">&#128228; Import Backup</button>
+              </div>
+              <div class="settings-data-row">
+                <button class="btn-app-danger" onclick="clearAll()">&#128465; Clear Current Certificate</button>
+              </div>
+              <div class="settings-hint">Export saves all certificate data, appliance history, and settings to a single JSON file. Import restores it completely.</div>
+            </div>
+          </div>
+
+        </div><!-- /settings-grid -->
+      </div>
+    </div><!-- /view-settings -->
+
+  </div><!-- /app-main -->
+</div><!-- /app-shell -->
+
+<script>
+  // Set dashboard date label
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('dashDate');
+    if (el) el.textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const mEl = document.getElementById('dashMonthLabel');
+    if (mEl) mEl.textContent = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  });
+</script>
 
 <script src="jspdf.umd.min.js"></script>
 <script src="cp12.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
