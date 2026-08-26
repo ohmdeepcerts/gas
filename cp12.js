@@ -284,7 +284,14 @@ function saveForm() {
 }
 
 function loadForm() {
+  const disabledApps = new Set();
+  for (let i = 1; i <= 5; i++) {
+    if (localStorage.getItem(AUTOSAVE_PREFIX + `app${i}_disabled`) === '1') disabledApps.add(i);
+  }
   document.querySelectorAll('[data-field]').forEach(el => {
+    const appMatch = el.dataset.field.match(/^app(\d+)_/);
+    const appN = appMatch ? parseInt(appMatch[1]) : null;
+    if (appN && disabledApps.has(appN)) { el.value = ''; return; }
     const key = AUTOSAVE_PREFIX + el.dataset.field;
     const stored = localStorage.getItem(key);
     if (stored !== null && stored !== '') {
@@ -292,6 +299,13 @@ function loadForm() {
     } else if (FIELD_DEFAULTS[el.dataset.field] !== undefined) {
       el.value = FIELD_DEFAULTS[el.dataset.field];
     }
+  });
+  disabledApps.forEach(n => {
+    const card = document.querySelector(`[data-appliance-row="${n}"]`);
+    if (!card) return;
+    card.classList.add('is-disabled');
+    const btn = card.querySelector('.app-row-toggle');
+    if (btn) btn.textContent = '+ add appliance';
   });
   refreshChoiceGroups();
   updateFullReference();
@@ -442,7 +456,15 @@ function clearAll() {
   if (keepCompany) localStorage.setItem('cp12_v5_company_name', keepCompany);
   if (keepLogo)    localStorage.setItem(LOGO_KEY, keepLogo);
 
-  // Clear all input/textarea/hidden values
+  // Clear all input/textarea/hidden values; reset disabled rows
+  for (let i = 1; i <= 5; i++) {
+    const card = document.querySelector(`[data-appliance-row="${i}"]`);
+    if (card) {
+      card.classList.remove('is-disabled');
+      const btn = card.querySelector('.app-row-toggle');
+      if (btn) btn.textContent = '— not in use';
+    }
+  }
   document.querySelectorAll('[data-field]').forEach(el => {
     const def = FIELD_DEFAULTS[el.dataset.field];
     el.value = (def !== undefined) ? def : '';
@@ -889,7 +911,7 @@ function buildSingleApplianceCard(n) {
   row.className = 'appliance-value-row';
 
   const cells = [
-    { cls: 'number-cell', html: `<input class="appliance-number-input" value="Appliance ${n}" readonly tabindex="-1">` },
+    { cls: 'number-cell', html: `<div style="display:flex;flex-direction:column;width:100%;height:100%"><input class="appliance-number-input" value="Appliance ${n}" readonly tabindex="-1" style="flex:1;width:100%"><button type="button" class="app-row-toggle" onclick="toggleAppRow(${n})">— not in use</button></div>` },
     { cls: 'location',    field: `app${n}_location`,    ph: 'Location' },
     { cls: 'type',        field: `app${n}_type`,        ph: 'Type' },
     { cls: 'make',        field: `app${n}_make`,        ph: 'Manufacturer' },
@@ -958,6 +980,28 @@ function buildSingleApplianceCard(n) {
   card.appendChild(co);
 
   return card;
+}
+
+function toggleAppRow(n) {
+  const card = document.querySelector(`[data-appliance-row="${n}"]`);
+  if (!card) return;
+  const nowDisabled = !card.classList.contains('is-disabled');
+  card.classList.toggle('is-disabled', nowDisabled);
+  const btn = card.querySelector('.app-row-toggle');
+  if (btn) btn.textContent = nowDisabled ? '+ add appliance' : '— not in use';
+  localStorage.setItem(AUTOSAVE_PREFIX + `app${n}_disabled`, nowDisabled ? '1' : '');
+  card.querySelectorAll('[data-field]').forEach(el => {
+    const f = el.dataset.field;
+    if (nowDisabled) {
+      el.value = '';
+      localStorage.setItem(AUTOSAVE_PREFIX + f, '');
+    } else {
+      const def = FIELD_DEFAULTS[f];
+      if (def !== undefined) el.value = def;
+    }
+  });
+  if (!nowDisabled) refreshChoiceGroups();
+  formDirty = true;
 }
 
 function _applyBoilerDefaults(n, row) {
