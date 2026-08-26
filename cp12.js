@@ -924,7 +924,7 @@ function buildSingleApplianceCard(n) {
     { cls: 'location',    field: `app${n}_location`,    ph: 'Location' },
     { cls: 'type',        field: `app${n}_type`,        ph: 'Type' },
     { cls: 'make',        field: `app${n}_make`,        ph: 'Manufacturer' },
-    { cls: '',            field: `app${n}_model`,       ph: 'Model' },
+    { cls: 'model',       html:  `<textarea data-field="app${n}_model" placeholder="Model" maxlength="30" rows="2"></textarea>` },
     { cls: 'choice-cell', choice: `app${n}_ownership`,  opts: 'Yes,No' },
     { cls: 'choice-cell', choice: `app${n}_inspected`,  opts: 'Yes,No' },
     { cls: '',            field: `app${n}_flue_type`,   ph: 'FL' },

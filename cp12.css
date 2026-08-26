@@ -663,7 +663,9 @@ body {
 .appliance-value-cell input, .appliance-value-cell select { width: 100%; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; color: #111827; font-family: inherit; font-size: 7.1pt; font-weight: 650; line-height: 1.05; padding: 2px 4px; text-align: center; }
 .appliance-value-cell input:focus, .appliance-value-cell select:focus { background: #eff6ff; box-shadow: inset 0 0 0 1px #60a5fa; }
 .appliance-number-input { font-size: 7.4pt !important; font-weight: 900 !important; color: #1e3a5f !important; }
-.appliance-value-cell.location input, .appliance-value-cell.type input, .appliance-value-cell.make input, .appliance-value-cell.model input { text-align: left; padding-left: 6px; }
+.appliance-value-cell.location input, .appliance-value-cell.type input, .appliance-value-cell.make input { text-align: left; padding-left: 6px; }
+.appliance-value-cell.model textarea { width: 100%; height: 100%; border: 0; outline: 0; background: transparent; color: #111827; font-family: inherit; font-size: 7.1pt; font-weight: 650; line-height: 1.3; padding: 2px 4px 2px 6px; text-align: left; resize: none; overflow: hidden; display: block; }
+.appliance-value-cell.model textarea:focus { background: #eff6ff; box-shadow: inset 0 0 0 1px #60a5fa; }
 
 .co-hanger { width: 100%; min-height: 20px; display: flex; flex-direction: row; align-items: stretch; background: rgba(251,191,36,.06); border: 2px solid #1e3a5f; border-top: 1px dashed #cbd5e1; border-radius: 0 0 6px 6px; overflow: hidden; }
 .co-hanger-title { flex: 0 0 26px; display: flex; align-items: center; justify-content: center; background: rgba(245,158,11,.2); color: #92400e; font-size: 5.8pt; font-weight: 900; text-transform: uppercase; letter-spacing: .1px; border-right: 1px solid #e2e8f0; }
@@ -698,6 +700,7 @@ body {
   #page2 .appliance-card.history-target-card .co-hanger { box-shadow: none !important; border-color: #1e3a5f !important; }
   .co-hanger { display: none !important; }
   .appliance-card.is-disabled .appliance-value-cell:not(.number-cell) * { visibility: hidden !important; }
+  .appliance-value-cell.model textarea { overflow: hidden !important; }
 }
 
 /* Focus */
