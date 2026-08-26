@@ -552,7 +552,7 @@ function initSignaturePad(canvas) {
     ctx.moveTo(lastX, lastY);
     ctx.lineTo(p.x, p.y);
     ctx.strokeStyle = '#111827';
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 3.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
@@ -623,7 +623,7 @@ function _initSigModalCanvas(canvas) {
     if (!drawing) return; e.preventDefault();
     const ctx = canvas.getContext('2d'), p = pos(e);
     ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y);
-    ctx.strokeStyle = '#111827'; ctx.lineWidth = 2.5 * dpr; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+    ctx.strokeStyle = '#111827'; ctx.lineWidth = 3.5 * dpr; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
     lastX = p.x; lastY = p.y;
   }
   function onEnd() { drawing = false; }

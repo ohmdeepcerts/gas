@@ -573,7 +573,9 @@ body {
 .sig-field { min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 4px; grid-row: 2; }
 .sig-field label { font-size: 8pt; font-weight: 700; color: #111827; white-space: nowrap; line-height: 1.1; display: flex; align-items: center; gap: 6px; }
 .sig-field:nth-child(2) { grid-column: 1; }
-.sig-field:nth-child(3) { grid-column: 2; }
+.sig-field:nth-child(3) { grid-column: 2; justify-content: center; }
+.sig-field:nth-child(3) label { justify-content: center; }
+.sig-field:nth-child(3) input { text-align: center; }
 
 /* Signature canvas — replaces old empty sig-line div */
 .sig-canvas {
@@ -711,6 +713,7 @@ input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 2px
   input::placeholder, textarea::placeholder { color: transparent !important; }
   input, textarea, select { color: #000 !important; }
   #page1 .attention-box .next-check-date { color: #dc2626 !important; -webkit-text-fill-color: #dc2626 !important; }
+  #page1 .title-box .company-input { color: #fff !important; -webkit-text-fill-color: #fff !important; }
   textarea { overflow: visible !important; resize: none !important; }
   #page1, #page2 { height: 200mm; min-height: 200mm; max-height: 200mm; overflow: hidden; }
   #page1 .bottom-split, #page1 .left-panel, #page1 .right-panel, #page1 .remedial-box, #page1 .sig-box { min-height: 0; overflow: hidden; }
