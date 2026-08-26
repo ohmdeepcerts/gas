@@ -1051,7 +1051,7 @@ function runExportValidation() {
   if (workEl) {
     const v = workEl.value;
     if (v.split('\n').length > 3 || v.length > 220) {
-      warnings.push('Work Carried Out text may be truncated in the PDF (exceeds ~3 lines). Review the yellow warning above the field.');
+      warnings.push('Work Carried Out text may be truncated in the PDF (exceeds ~3 lines).');
     }
   }
   if (!warnings.length) return true;
@@ -1080,11 +1080,26 @@ function isPdfVisible(el) {
   if (!el) return false;
   let cur = el;
   while (cur && cur !== document.body) {
+    if (cur.classList && cur.classList.contains('no-print')) return false;
     const st = window.getComputedStyle(cur);
     if (st.display === 'none' || st.visibility === 'hidden' || parseFloat(st.opacity) === 0) return false;
     cur = cur.parentElement;
   }
   return true;
+}
+
+function getPdfText(el) {
+  if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') return el.value || '';
+  if (el.tagName === 'SELECT') return el.options[el.selectedIndex]?.text || '';
+  let text = '';
+  for (const node of el.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      text += node.textContent;
+    } else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('no-print')) {
+      text += getPdfText(node);
+    }
+  }
+  return text;
 }
 
 function drawDomBox(doc, map, el, opts) {
@@ -1114,15 +1129,7 @@ function drawDomText(doc, map, el, opts) {
   const o = opts || {};
   const st = window.getComputedStyle(el);
 
-  let text = '';
-  if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-    text = el.value || '';
-  } else if (el.tagName === 'SELECT') {
-    text = el.options[el.selectedIndex]?.text || '';
-  } else {
-    text = el.innerText || el.textContent || '';
-  }
-  text = text.trim();
+  const text = getPdfText(el).trim();
   if (!text) return;
 
   const fontSizePt = parseFloat(st.fontSize) * 0.75 * map.mm(1) * 2.835;
