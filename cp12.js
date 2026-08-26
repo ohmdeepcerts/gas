@@ -606,19 +606,24 @@ function openSigModal(fieldKey, titleText) {
 }
 
 function _initSigModalCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const r0 = canvas.getBoundingClientRect();
+  canvas.width  = Math.round(r0.width  * dpr);
+  canvas.height = Math.round(r0.height * dpr);
+  canvas.getContext('2d').scale(dpr, dpr);
+
   let drawing = false, lastX = 0, lastY = 0;
   function pos(e) {
     const r = canvas.getBoundingClientRect();
-    const sx = canvas.width / r.width, sy = canvas.height / r.height;
-    if (e.touches && e.touches[0]) return { x: (e.touches[0].clientX - r.left) * sx, y: (e.touches[0].clientY - r.top) * sy };
-    return { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy };
+    if (e.touches && e.touches[0]) return { x: (e.touches[0].clientX - r.left) * dpr, y: (e.touches[0].clientY - r.top) * dpr };
+    return { x: (e.clientX - r.left) * dpr, y: (e.clientY - r.top) * dpr };
   }
   function onStart(e) { e.preventDefault(); drawing = true; const p = pos(e); lastX = p.x; lastY = p.y; }
   function onMove(e) {
     if (!drawing) return; e.preventDefault();
     const ctx = canvas.getContext('2d'), p = pos(e);
     ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y);
-    ctx.strokeStyle = '#111827'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+    ctx.strokeStyle = '#111827'; ctx.lineWidth = 2.5 * dpr; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
     lastX = p.x; lastY = p.y;
   }
   function onEnd() { drawing = false; }
@@ -649,10 +654,12 @@ function confirmSigModal() {
   const realCanvas = document.querySelector(`.sig-canvas[data-sig-field="${fieldKey}"]`);
   if (realCanvas) {
     const rect = realCanvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    realCanvas.width = Math.round(rect.width * dpr);
-    realCanvas.height = Math.round(rect.height * dpr);
+    const scale = 3;
+    realCanvas.width  = Math.round(rect.width  * scale);
+    realCanvas.height = Math.round(rect.height * scale);
     const ctx = realCanvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.clearRect(0, 0, realCanvas.width, realCanvas.height);
     ctx.drawImage(modalCanvas, 0, 0, realCanvas.width, realCanvas.height);
     try { localStorage.setItem('cp12_v5_' + fieldKey, realCanvas.toDataURL('image/png')); } catch(e) {}
