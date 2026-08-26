@@ -646,7 +646,7 @@ body {
 .p2-column-header,
 .appliance-value-row {
   display: grid;
-  grid-template-columns: 3.5fr 8fr 8fr 8.5fr 9fr 5fr 4.5fr 5fr 7.5fr 7fr 6fr 6fr 5.5fr 7fr 5fr 4.5fr;
+  grid-template-columns: 3.5fr 8fr 8fr 8.5fr 6.5fr 7fr 5fr 5fr 7.5fr 7fr 6fr 6fr 5.5fr 7fr 5fr 4.5fr;
 }
 .p2-column-header { flex: 0 0 55px; min-height: 55px; margin-bottom: 7px; background: #1e3a5f; border: 2px solid #1e3a5f; border-radius: 7px; overflow: hidden; }
 .p2-head-cell { min-width: 0; display: flex; align-items: center; justify-content: center; padding: 3px 2px; color: #fff; font-size: 6.1pt; line-height: 1.08; font-weight: 800; text-align: center; border-right: 1px solid rgba(255,255,255,.32); overflow: hidden; }
