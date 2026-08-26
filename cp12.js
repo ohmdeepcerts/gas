@@ -966,15 +966,15 @@ function buildSingleApplianceCard(n) {
     <div class="co-mini-grid">
       <div class="co-mini">
         <label>Approved CO Alarm Fitted?</label>
-        <div class="choice-group"><button type="button" class="choice-cycle" data-group="app${n}_co_present" data-options="Yes,No"></button><input type="hidden" data-field="app${n}_co_present"></div>
+        <div class="choice-group"><button type="button" class="choice-cycle" data-group="app${n}_co_present" data-options="Yes,No,N/A"></button><input type="hidden" data-field="app${n}_co_present"></div>
       </div>
       <div class="co-mini">
         <label>Is CO Alarm in Date?</label>
-        <div class="choice-group"><button type="button" class="choice-cycle" data-group="app${n}_co_in_date" data-options="Yes,No"></button><input type="hidden" data-field="app${n}_co_in_date"></div>
+        <div class="choice-group"><button type="button" class="choice-cycle" data-group="app${n}_co_in_date" data-options="Yes,No,N/A"></button><input type="hidden" data-field="app${n}_co_in_date"></div>
       </div>
       <div class="co-mini">
         <label>CO Alarm Test Satisfactory?</label>
-        <div class="choice-group"><button type="button" class="choice-cycle" data-group="app${n}_co_tested" data-options="Yes,No"></button><input type="hidden" data-field="app${n}_co_tested"></div>
+        <div class="choice-group"><button type="button" class="choice-cycle" data-group="app${n}_co_tested" data-options="Yes,No,N/A"></button><input type="hidden" data-field="app${n}_co_tested"></div>
       </div>
     </div>`;
   card.appendChild(co);
@@ -1162,10 +1162,7 @@ function drawStatusControl(doc, map, el) {
   const val = btn.dataset.current || '';
   if (!val || val === '—') return;
   doc.setFontSize(10);
-  const green = [22, 163, 74], red = [220, 38, 38], navy = [30, 58, 95];
-  const color = (val === '✓' || val === 'Yes' || val === 'Pass') ? green
-              : (val === '✕' || val === 'No'  || val === 'Fail') ? red
-              : navy;
+  const color = val === 'N/A' ? [107, 114, 128] : [30, 58, 95];
   doc.setTextColor(...color);
   doc.setFont('helvetica', 'bold');
   doc.text(val, r.x + r.w / 2, r.y + r.h / 2 + 1.5, { align: 'center' });

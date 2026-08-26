@@ -449,29 +449,29 @@ body {
 /* Choice controls */
 .choice-group { width: 100%; display: flex; justify-content: center; align-items: center; }
 .choice-cycle {
-  border: 1px solid #94a3b8;
+  border: 1px solid #9ca3af;
   background: #fff;
-  color: #1e3a5f;
+  color: #111827;
   border-radius: 3px;
   min-width: 38px;
   height: 21px;
   padding: 0 6px;
   font-family: inherit;
   font-size: 7.2pt;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 19px;
   cursor: pointer;
   text-align: center;
   user-select: none;
 }
-.choice-cycle:hover { background: #eff6ff; border-color: #3b82f6; }
-.choice-cycle[data-current="✓"] { background: #fff; border-color: #86c99a; color: #16a34a; font-size: 10pt; font-weight: 800; }
-.choice-cycle[data-current="✕"] { background: #fff; border-color: #94a3b8; color: #dc2626; font-size: 10pt; }
-.choice-cycle[data-current="N/A"] { background: #f8fafc; border-color: #cbd5e1; color: #64748b; font-size: 7pt; }
-.choice-cycle[data-current="Yes"] { background: #f0fdf4; border-color: #86c99a; color: #16a34a; font-size: 7pt; }
-.choice-cycle[data-current="No"] { background: #fef2f2; border-color: #f0a4a4; color: #dc2626; font-size: 7pt; }
-.choice-cycle[data-current="Pass"] { background: #f0fdf4; border-color: #86c99a; color: #16a34a; font-size: 7pt; font-weight: 800; }
-.choice-cycle[data-current="Fail"] { background: #fef2f2; border-color: #f0a4a4; color: #dc2626; font-size: 7pt; font-weight: 800; }
+.choice-cycle:hover { background: #f9fafb; border-color: #374151; }
+.choice-cycle[data-current="✓"] { color: #111827; border-color: #9ca3af; font-size: 10pt; font-weight: 700; }
+.choice-cycle[data-current="✕"] { color: #111827; border-color: #9ca3af; font-size: 10pt; }
+.choice-cycle[data-current="N/A"] { color: #6b7280; border-color: #9ca3af; font-size: 7pt; }
+.choice-cycle[data-current="Yes"] { color: #111827; border-color: #9ca3af; font-size: 7pt; font-weight: 700; }
+.choice-cycle[data-current="No"] { color: #111827; border-color: #9ca3af; font-size: 7pt; font-weight: 700; }
+.choice-cycle[data-current="Pass"] { color: #111827; border-color: #9ca3af; font-size: 7pt; font-weight: 700; }
+.choice-cycle[data-current="Fail"] { color: #111827; border-color: #9ca3af; font-size: 7pt; font-weight: 700; }
 .pipe-choice .choice-cycle { min-width: 34px; }
 
 @media print {
@@ -479,19 +479,16 @@ body {
   .choice-cycle {
     border: 0 !important;
     background: transparent !important;
-    color: #000 !important;
+    color: #111827 !important;
     min-width: 0 !important;
     width: auto !important;
     height: 20px !important;
     padding: 0 2px !important;
     font-size: 9pt !important;
+    font-weight: 700 !important;
     cursor: default !important;
   }
-  .choice-cycle[data-current="✓"] { color: #16a34a !important; font-weight: 800 !important; }
-  .choice-cycle[data-current="✕"] { color: #dc2626 !important; font-weight: 800 !important; }
-  .choice-cycle[data-current="N/A"] { color: #64748b !important; font-weight: 700 !important; }
-  .choice-cycle[data-current="Yes"] { color: #16a34a !important; font-weight: 800 !important; }
-  .choice-cycle[data-current="No"] { color: #dc2626 !important; font-weight: 800 !important; }
+  .choice-cycle[data-current="N/A"] { color: #6b7280 !important; font-weight: 600 !important; }
 }
 
 .defects-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
