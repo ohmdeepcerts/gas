@@ -649,8 +649,8 @@ body {
 .p2-head-cell:last-child { border-right: 0; }
 .p2-head-cell.important { background: rgba(245,158,11,.18); color: #fff; }
 
-.appliance-cards { flex: 1 1 auto; min-height: 0; display: grid; grid-template-rows: repeat(5, auto); gap: 6px; align-content: start; }
-.appliance-card { min-height: 0; display: grid; grid-template-rows: 36px 20px; row-gap: 0; }
+.appliance-cards { flex: 1 1 auto; min-height: 0; display: grid; grid-template-rows: repeat(5, 1fr); gap: 8px; }
+.appliance-card { min-height: 0; display: grid; grid-template-rows: 1fr 20px; row-gap: 0; }
 .appliance-main-shell { min-height: 0; background: #fff; border: 2px solid #1e3a5f; border-radius: 6px 6px 0 0; border-bottom: 1px dashed #cbd5e1; overflow: hidden; }
 .appliance-value-row { height: 100%; min-height: 0; }
 .appliance-value-cell { min-width: 0; min-height: 0; display: flex; align-items: stretch; justify-content: center; background: #fff; border-right: 1px solid #1e3a5f; overflow: hidden; }
@@ -679,8 +679,9 @@ body {
 }
 .app-row-toggle:hover { background: #fef2f2; color: #dc2626; border-color: #fca5a5; }
 .appliance-card.is-disabled .app-row-toggle { background: #f0fdf4; color: #16a34a; border-color: #86efac; }
-.appliance-card.is-disabled .appliance-value-cell:not(.number-cell) { opacity: 0.1; pointer-events: none; }
-.appliance-card.is-disabled .co-hanger { opacity: 0.07; pointer-events: none; }
+.appliance-card.is-disabled .appliance-value-cell:not(.number-cell) { opacity: 0.12; pointer-events: none; }
+.appliance-card.is-disabled .co-hanger { display: none; }
+.appliance-card.is-disabled .appliance-main-shell { border-radius: 6px; border-bottom: 2px solid #1e3a5f; }
 
 .appliance-card.history-target-card .appliance-main-shell { border-color: #2563eb !important; box-shadow: 0 0 0 2px rgba(37,99,235,.18); }
 .appliance-card.history-target-card .co-hanger { border-color: #2563eb !important; }
