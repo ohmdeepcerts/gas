@@ -192,14 +192,14 @@ body {
   white-space: nowrap;
 }
 @media print {
-  #page1 .merged-header { min-height: 62px; margin-bottom: 3px; }
-  #page1 .logo-zone img { height: 48px; }
+  #page1 .merged-header { min-height: 80px; margin-bottom: 3px; }
+  #page1 .logo-zone img { height: 62px; }
   #page1 .logo-placeholder { display: none !important; }
   #page1 .top-bar { padding: 1px 4px; gap: 3px; }
   #page1 .top-item input, #page1 .top-item.wide input { height: 16px; }
-  #page1 .title-box { min-height: 39px; padding: 2px 8px 3px; }
-  #page1 .title-box .company-input { height: 20px; font-size: 16.5pt; font-weight: 800; }
-  #page1 .title-box .doctitle { font-size: 14.5pt; font-weight: 800; line-height: 1.02; }
+  #page1 .title-box { min-height: 57px; padding: 7px 8px 8px; }
+  #page1 .title-box .company-input { height: 26px; font-size: 19pt; font-weight: 800; }
+  #page1 .title-box .doctitle { font-size: 15.5pt; font-weight: 800; line-height: 1.02; }
 }
 
 /* ===== 3-COLUMN ADDRESS / BUSINESS BOXES ===== */
@@ -359,8 +359,9 @@ body {
   border: 2px solid #1e3a5f;
   border-radius: 6px;
   overflow: hidden;
-  margin-bottom: 8px;
-  flex-shrink: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 .work-box-header {
   background: #1e3a5f;
@@ -383,7 +384,8 @@ body {
 .work-box-header .work-char-count.over { color: #fca5a5; font-weight: 700; }
 .work-box textarea {
   width: 100%;
-  height: 42px;
+  flex: 1;
+  min-height: 0;
   border: none;
   resize: none;
   font-family: inherit;
@@ -721,13 +723,13 @@ input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 2px
 /* Architecture V2: one A4 geometry for screen, print & PDF */
 .page { width: 297mm; height: 210mm; min-height: 210mm; max-height: 210mm; padding: 10mm 12mm; overflow: hidden; }
 
-#page1 .merged-header { min-height: 62px; margin-bottom: 3px; }
-#page1 .logo-zone img { height: 48px; }
+#page1 .merged-header { min-height: 80px; margin-bottom: 3px; }
+#page1 .logo-zone img { height: 62px; }
 #page1 .top-bar { padding: 1px 4px; gap: 3px; }
 #page1 .top-item input, #page1 .top-item.wide input { height: 16px; }
-#page1 .title-box { min-height: 39px; padding: 2px 8px 3px; }
-#page1 .title-box .company-input { height: 20px; font-size: 16.5pt; font-weight: 800; }
-#page1 .title-box .doctitle { font-size: 14.5pt; font-weight: 800; line-height: 1.02; }
+#page1 .title-box { min-height: 57px; padding: 7px 8px 8px; }
+#page1 .title-box .company-input { height: 26px; font-size: 19pt; font-weight: 800; }
+#page1 .title-box .doctitle { font-size: 15.5pt; font-weight: 800; line-height: 1.02; }
 
 #page1 .sig-box { grid-template-columns: minmax(0, 1fr) 160px; column-gap: 10px; row-gap: 6px; padding: 6px; }
 #page1 .sig-inner { padding: 5px 7px; }
@@ -755,7 +757,7 @@ input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 2px
   #page1 .compact-address .address-main, #page1 .business-details { height: 67px; min-height: 67px; }
   #page1 .pc-line input, #page1 .compact-contact input { height: 19px; padding: 1px 3px; }
   #page1 .pc-line label, #page1 .compact-contact label { font-size: 6.7pt; }
-  #page1 .work-box textarea { height: 42px; min-height: 42px; resize: none; }
+  #page1 .work-box textarea { flex: 1; min-height: 0; resize: none; }
 }
 
 /* Misc layout */
