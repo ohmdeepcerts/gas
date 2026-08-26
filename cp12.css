@@ -667,8 +667,8 @@ body {
 
 .co-hanger { width: 100%; min-height: 20px; display: flex; flex-direction: row; align-items: stretch; background: rgba(251,191,36,.06); border: 2px solid #1e3a5f; border-top: 1px dashed #cbd5e1; border-radius: 0 0 6px 6px; overflow: hidden; }
 .co-hanger-title { flex: 0 0 26px; display: flex; align-items: center; justify-content: center; background: rgba(245,158,11,.2); color: #92400e; font-size: 5.8pt; font-weight: 900; text-transform: uppercase; letter-spacing: .1px; border-right: 1px solid #e2e8f0; }
-.co-mini-grid { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.co-mini { min-width: 0; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; border-left: 1px solid #e2e8f0; padding: 2px 5px; overflow: hidden; }
+.co-mini-grid { flex: 1; min-width: 0; display: flex; flex-direction: row; align-items: stretch; }
+.co-mini { flex: 0 0 auto; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 4px; border-left: 1px solid #e2e8f0; padding: 2px 8px; }
 .co-mini label { min-width: 0; flex-shrink: 1; color: #64748b; font-size: 5.8pt; font-weight: 700; white-space: normal; line-height: 1.2; text-align: center; }
 .co-mini .choice-cycle { flex-shrink: 0; min-width: 26px; height: 16px; font-size: 6.5pt; line-height: 14px; padding: 0 3px; }
 
@@ -696,6 +696,8 @@ body {
   #page2 .p2-column-header { margin-bottom: 7px; }
   #page2 .appliance-card.history-target-card .appliance-main-shell,
   #page2 .appliance-card.history-target-card .co-hanger { box-shadow: none !important; border-color: #1e3a5f !important; }
+  .co-hanger { display: none !important; }
+  .appliance-card.is-disabled .appliance-value-cell:not(.number-cell) * { visibility: hidden !important; }
 }
 
 /* Focus */
