@@ -287,7 +287,7 @@ function loadForm() {
   document.querySelectorAll('[data-field]').forEach(el => {
     const key = AUTOSAVE_PREFIX + el.dataset.field;
     const stored = localStorage.getItem(key);
-    if (stored !== null) {
+    if (stored !== null && stored !== '') {
       el.value = stored;
     } else if (FIELD_DEFAULTS[el.dataset.field] !== undefined) {
       el.value = FIELD_DEFAULTS[el.dataset.field];
