@@ -649,8 +649,8 @@ body {
 .p2-head-cell:last-child { border-right: 0; }
 .p2-head-cell.important { background: rgba(245,158,11,.18); color: #fff; }
 
-.appliance-cards { flex: 1 1 auto; min-height: 0; display: grid; grid-template-rows: repeat(5, 1fr); gap: 8px; }
-.appliance-card { min-height: 0; display: grid; grid-template-rows: 1fr 20px; row-gap: 0; }
+.appliance-cards { flex: 1 1 auto; min-height: 0; display: grid; grid-template-rows: repeat(5, auto); align-content: space-between; }
+.appliance-card { display: grid; grid-template-rows: 36px 20px; row-gap: 0; }
 .appliance-main-shell { min-height: 0; background: #fff; border: 2px solid #1e3a5f; border-radius: 6px 6px 0 0; border-bottom: 1px dashed #cbd5e1; overflow: hidden; }
 .appliance-value-row { height: 100%; min-height: 0; }
 .appliance-value-cell { min-width: 0; min-height: 0; display: flex; align-items: stretch; justify-content: center; background: #fff; border-right: 1px solid #1e3a5f; overflow: hidden; }
