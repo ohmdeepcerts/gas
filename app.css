@@ -5,7 +5,7 @@
 html, body {
   height: 100%;
   overflow: hidden;
-  background: #0f172a;
+  background: #1a1a1a;
 }
 
 /* ── APP SHELL ────────────────────────────────────────────────── */
@@ -19,7 +19,7 @@ html, body {
 .sidebar {
   width: 220px;
   min-width: 220px;
-  background: #1e3a5f;
+  background: #1a1a1a;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -38,13 +38,13 @@ html, body {
 .sb-logo-mark {
   width: 40px;
   height: 40px;
-  background: #f59e0b;
+  background: #EAB308;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 900;
-  color: #1e3a5f;
+  color: #1a1a1a;
   font-size: 13px;
   letter-spacing: -.5px;
   margin-bottom: 8px;
@@ -110,9 +110,9 @@ html, body {
   color: rgba(255,255,255,.88);
 }
 .sb-link.active {
-  background: rgba(245,158,11,.12);
-  color: #f59e0b;
-  border-left-color: #f59e0b;
+  background: rgba(234,179,8,.15);
+  color: #EAB308;
+  border-left-color: #EAB308;
 }
 .sb-icon {
   width: 20px;
@@ -127,13 +127,13 @@ html, body {
   flex-shrink: 0;
 }
 .sb-renewal-badge {
-  background: rgba(245,158,11,.1);
-  border: 1px solid rgba(245,158,11,.25);
+  background: rgba(234,179,8,.12);
+  border: 1px solid rgba(234,179,8,.28);
   border-radius: 8px;
   padding: 8px 10px;
   cursor: pointer;
 }
-.sb-renewal-badge:hover { background: rgba(245,158,11,.18); }
+.sb-renewal-badge:hover { background: rgba(234,179,8,.22); }
 .sb-renewal-label {
   color: rgba(255,255,255,.4);
   font-size: 8px;
@@ -142,7 +142,7 @@ html, body {
   letter-spacing: .4px;
 }
 .sb-renewal-val {
-  color: #f59e0b;
+  color: #EAB308;
   font-size: 13px;
   font-weight: 800;
   margin-top: 2px;
@@ -202,8 +202,8 @@ html, body {
 
 /* ── BUTTONS ──────────────────────────────────────────────────── */
 .btn-app-primary {
-  background: #f59e0b;
-  color: #1e3a5f;
+  background: #EAB308;
+  color: #1a1a1a;
   border: none;
   border-radius: 7px;
   padding: 8px 16px;
@@ -213,7 +213,7 @@ html, body {
   font-family: inherit;
   white-space: nowrap;
 }
-.btn-app-primary:hover { background: #d97706; }
+.btn-app-primary:hover { background: #ca8a04; }
 .btn-app-secondary {
   background: #fff;
   color: #374151;
@@ -266,7 +266,7 @@ html, body {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
-  background: #1e3a5f;
+  background: #EAB308;
 }
 .dash-stat-card.amber::before { background: #f59e0b; }
 .dash-stat-card.red::before   { background: #dc2626; }
@@ -337,7 +337,7 @@ html, body {
 }
 .dash-table tr:last-child td { border-bottom: 0; }
 .dash-table tr:hover td { background: #f8fafc; }
-.dash-table .ref-cell { font-weight: 800; color: #1e3a5f; white-space: nowrap; }
+.dash-table .ref-cell { font-weight: 800; color: #1a1a1a; white-space: nowrap; }
 .dash-table .addr-cell { max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dash-table .action-cell { white-space: nowrap; }
 .dash-table .td-btn {
@@ -382,8 +382,8 @@ html, body {
 .dash-empty .empty-action {
   display: inline-block;
   margin-top: 14px;
-  background: #f59e0b;
-  color: #1e3a5f;
+  background: #EAB308;
+  color: #1a1a1a;
   border: none;
   border-radius: 7px;
   padding: 9px 20px;
@@ -427,7 +427,7 @@ html, body {
   font-family: inherit;
   white-space: nowrap;
 }
-.filter-chip.active { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
+.filter-chip.active { background: #EAB308; color: #1a1a1a; border-color: #EAB308; }
 .filter-chip:hover:not(.active) { background: #f1f5f9; border-color: #cbd5e1; }
 
 .certs-grid {
@@ -454,7 +454,7 @@ html, body {
 .cert-card-ref {
   font-weight: 800;
   font-size: 13px;
-  color: #1e3a5f;
+  color: #1a1a1a;
   margin-bottom: 3px;
   padding-right: 60px;
 }
@@ -531,8 +531,8 @@ html, body {
 }
 .settings-section.full { grid-column: 1 / -1; }
 .settings-section-head {
-  background: #1e3a5f;
-  color: #fff;
+  background: #EAB308;
+  color: #1a1a1a;
   padding: 10px 16px;
   font-size: 12px;
   font-weight: 700;
@@ -580,7 +580,7 @@ html, body {
   line-height: 1.5;
   transition: border-color .12s, background .12s;
 }
-.settings-logo-zone:hover { border-color: #1e3a5f; background: #f0f4ff; color: #1e3a5f; }
+.settings-logo-zone:hover { border-color: #EAB308; background: #fefce8; color: #1a1a1a; }
 .settings-logo-zone.has-logo { border-style: solid; border-color: #86efac; background: #f0fdf4; color: #15803d; }
 .settings-logo-preview { max-width: 100%; max-height: 60px; object-fit: contain; display: none; margin: 6px auto 0; }
 .settings-logo-zone.has-logo .settings-logo-preview { display: block; }
@@ -617,7 +617,7 @@ html, body {
   display: block;
   font-size: 22px;
   font-weight: 900;
-  color: #f59e0b;
+  color: #EAB308;
   letter-spacing: 3px;
   text-transform: uppercase;
   line-height: 1.05;
@@ -661,7 +661,7 @@ html, body {
   margin-top: 2px;
   line-height: 1.2;
 }
-.ac-addr-line { font-size: 10.5px; font-weight: 600; color: #1e3a5f; }
+.ac-addr-line { font-size: 10.5px; font-weight: 600; color: #1a1a1a; }
 .ac-addr-pc   { font-size: 10px; color: #64748b; margin-top: 1px; }
 
 /* ── SIGNATURE MODAL ─────────────────────────────────────────── */
@@ -683,7 +683,7 @@ html, body {
   max-width: 760px;
   width: 92%;
 }
-.sig-modal-title { font-size: 16px; font-weight: 700; color: #1e3a5f; margin-bottom: 4px; }
+.sig-modal-title { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
 .sig-modal-hint  { font-size: 11px; color: #64748b; margin-bottom: 12px; }
 #sigModalCanvas {
   display: block;
