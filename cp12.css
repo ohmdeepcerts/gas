@@ -425,16 +425,13 @@ body {
 }
 
 .defects-split-header {
-  display: flex;
-  align-items: center;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 118px;
+  align-items: stretch !important;
   padding: 0 !important;
-  min-height: 27px;
 }
-.defects-split-header .defects-heading { display: flex; align-items: center; flex: 1; padding: 0 8px; justify-content: flex-start; }
-.warn-header-row { height: 36px !important; }
-.warn-header-row td.warn { display: flex; flex-direction: column; padding: 0; vertical-align: top; }
-.warn-col-label { font-size: 5.5pt; font-weight: 800; text-transform: uppercase; letter-spacing: .2px; color: #fff; background: #1e3a5f; text-align: center; padding: 2px 4px; line-height: 1.2; flex-shrink: 0; }
-.warn-header-row td.warn input { flex: 1; }
+.defects-split-header > span { display: flex; align-items: center; min-height: 27px; padding: 0 8px; }
+.defects-split-header .warn-heading { justify-content: center; text-align: center; border-left: 1px solid rgba(255,255,255,.6); font-size: 6.4pt; line-height: 1.05; padding-left: 2px; padding-right: 2px; }
 
 .pipe-split-header {
   display: grid !important;
