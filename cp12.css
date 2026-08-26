@@ -425,18 +425,12 @@ body {
 }
 
 .defects-split-header {
-  display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) 118px;
-  align-items: stretch;
-  padding: 0 !important;
-}
-.defects-split-header > span {
   display: flex;
   align-items: center;
+  padding: 0 !important;
   min-height: 27px;
-  padding: 0 8px;
 }
-.defects-split-header .defects-heading { grid-column: 1 / -1; justify-content: flex-start; text-align: left; padding-left: 5px; }
+.defects-split-header .defects-heading { display: flex; align-items: center; flex: 1; padding: 0 8px; justify-content: flex-start; }
 .warn-header-row { height: 36px !important; }
 .warn-header-row td.warn { display: flex; flex-direction: column; padding: 0; vertical-align: top; }
 .warn-col-label { font-size: 5.5pt; font-weight: 800; text-transform: uppercase; letter-spacing: .2px; color: #fff; background: #1e3a5f; text-align: center; padding: 2px 4px; line-height: 1.2; flex-shrink: 0; }
