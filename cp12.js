@@ -911,7 +911,7 @@ function buildSingleApplianceCard(n) {
   row.className = 'appliance-value-row';
 
   const cells = [
-    { cls: 'number-cell', html: `<div style="display:flex;flex-direction:column;width:100%;height:100%"><input class="appliance-number-input" value="Appliance ${n}" readonly tabindex="-1" style="flex:1;width:100%"><button type="button" class="app-row-toggle" onclick="toggleAppRow(${n})">— not in use</button></div>` },
+    { cls: 'number-cell', html: `<div style="display:flex;flex-direction:column;width:100%;height:100%"><input class="appliance-number-input" value="${n}" readonly tabindex="-1" style="flex:1;width:100%"><button type="button" class="app-row-toggle" onclick="toggleAppRow(${n})">— not in use</button></div>` },
     { cls: 'location',    field: `app${n}_location`,    ph: 'Location' },
     { cls: 'type',        field: `app${n}_type`,        ph: 'Type' },
     { cls: 'make',        field: `app${n}_make`,        ph: 'Manufacturer' },
