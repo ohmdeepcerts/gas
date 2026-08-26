@@ -648,11 +648,13 @@ function confirmSigModal() {
   if (!modalCanvas || !fieldKey) { closeSigModal(); return; }
   const realCanvas = document.querySelector(`.sig-canvas[data-sig-field="${fieldKey}"]`);
   if (realCanvas) {
+    const rect = realCanvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    realCanvas.width = Math.round(rect.width * dpr);
+    realCanvas.height = Math.round(rect.height * dpr);
     const ctx = realCanvas.getContext('2d');
-    realCanvas.width = modalCanvas.width;
-    realCanvas.height = modalCanvas.height;
     ctx.clearRect(0, 0, realCanvas.width, realCanvas.height);
-    ctx.drawImage(modalCanvas, 0, 0);
+    ctx.drawImage(modalCanvas, 0, 0, realCanvas.width, realCanvas.height);
     try { localStorage.setItem('cp12_v5_' + fieldKey, realCanvas.toDataURL('image/png')); } catch(e) {}
     formDirty = true;
   }
