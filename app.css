@@ -732,11 +732,11 @@ html, body {
 /* ── PRINT ────────────────────────────────────────────────────── */
 @media print {
   html, body { height: auto; overflow: visible; background: #fff; }
-  .app-shell { display: block; height: auto; }
+  .app-shell { display: block; height: auto; overflow: visible; }
   .sidebar { display: none !important; }
-  .app-main { overflow: visible; background: #fff; }
+  .app-main { overflow: visible; height: auto; background: #fff; }
   .view { display: none !important; min-height: 0; }
-  #view-new { display: flex !important; }
+  #view-new { display: flex !important; flex-direction: column; overflow: visible !important; height: auto !important; min-height: 0 !important; }
   #view-new .view-head { display: none !important; }
-  #view-new .view-body { padding: 0; background: #fff; overflow: visible; }
+  #view-new .view-body { padding: 0; background: #fff; overflow: visible !important; flex: none; height: auto; }
 }
