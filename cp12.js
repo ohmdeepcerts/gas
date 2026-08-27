@@ -318,6 +318,10 @@ function loadForm() {
   loadLogo();
   loadSignatures();
   updateWorkCount(document.querySelector('[data-field="work_details"]'));
+  // Trigger auto-sizers for pre-filled appliance text fields
+  document.querySelectorAll('.appliance-value-cell.location textarea, .appliance-value-cell.type textarea, .appliance-value-cell.make textarea, .appliance-value-cell.model textarea').forEach(el => {
+    el.dispatchEvent(new Event('input'));
+  });
 }
 
 setInterval(saveForm, 4000);
@@ -963,10 +967,10 @@ function buildSingleApplianceCard(n) {
 
   const cells = [
     { cls: 'number-cell', html: `<div style="display:flex;flex-direction:column;width:100%;height:100%"><input class="appliance-number-input" value="${n}" readonly tabindex="-1" style="flex:1;width:100%"><button type="button" class="app-row-toggle" onclick="toggleAppRow(${n})">— not in use</button></div>` },
-    { cls: 'location',    html:  `<textarea data-field="app${n}_location" placeholder="Location" maxlength="30"></textarea>` },
-    { cls: 'type',        field: `app${n}_type`,        ph: 'Type' },
-    { cls: 'make',        field: `app${n}_make`,        ph: 'Manufacturer' },
-    { cls: 'model',       html:  `<textarea data-field="app${n}_model" placeholder="Model" maxlength="30"></textarea>` },
+    { cls: 'location',    html:  `<textarea data-field="app${n}_location" placeholder="Location" maxlength="30" rows="1"></textarea>` },
+    { cls: 'type',        html: `<textarea data-field="app${n}_type" placeholder="Type" maxlength="28" rows="1"></textarea>` },
+    { cls: 'make',        html: `<textarea data-field="app${n}_make" placeholder="Manufacturer" maxlength="28" rows="1"></textarea>` },
+    { cls: 'model',       html:  `<textarea data-field="app${n}_model" placeholder="Model" maxlength="30" rows="1"></textarea>` },
     { cls: 'choice-cell', choice: `app${n}_ownership`,  opts: 'Yes,No' },
     { cls: 'choice-cell', choice: `app${n}_inspected`,  opts: 'Yes,No' },
     { cls: '',            field: `app${n}_flue_type`,   ph: 'FL' },
@@ -1000,6 +1004,12 @@ function buildSingleApplianceCard(n) {
   AC_FIELDS.forEach(fieldName => {
     const input = row.querySelector(`[data-field="${fieldName}"]`);
     if (input) initApplianceAutocomplete(input, card);
+  });
+
+  // Auto-font-sizer on all free-text cells
+  ['location', 'type', 'make', 'model'].forEach(f => {
+    const el = row.querySelector(`[data-field="app${n}_${f}"]`);
+    if (el) initAutoSizeTextarea(el);
   });
 
   // Smart defaults: watch type field for boiler detection
@@ -1098,6 +1108,29 @@ function runExportValidation() {
   }
   if (!warnings.length) return true;
   return confirm('⚠ Before generating PDF:\n\n' + warnings.map((w, i) => (i + 1) + '. ' + w).join('\n\n') + '\n\nProceed anyway?');
+}
+
+// ── Appliance text field auto-sizer ──────────────────────────────────────────
+function initAutoSizeTextarea(el) {
+  const TIERS = [
+    { max: 17, pt: 8.5 },
+    { max: 24, pt: 7.5 },
+    { max: Infinity, pt: 7.0 },
+  ];
+  function update() {
+    const len = el.value.length;
+    const tier = TIERS.find(t => len <= t.max) || TIERS[TIERS.length - 1];
+    el.style.fontSize = tier.pt + 'pt';
+    // Expand to 2 rows if content wraps, otherwise stay at 1
+    el.rows = 1;
+    const singleH = el.scrollHeight;
+    el.rows = 2;
+    const doubleH = el.scrollHeight;
+    const contentH = el.scrollHeight; // after rows=2
+    el.rows = contentH > singleH ? 2 : 1;
+  }
+  el.addEventListener('input', update);
+  update();
 }
 
 // ── Signature clear helper (for sig-clear-btn) ───────────────────────────────
