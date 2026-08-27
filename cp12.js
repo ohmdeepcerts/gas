@@ -318,7 +318,6 @@ function loadForm() {
   updateFullReference();
   loadLogo();
   loadSignatures();
-  updateWorkCount(document.querySelector('[data-field="work_details"]'));
   // Trigger auto-sizers for pre-filled appliance text fields
   document.querySelectorAll('.appliance-value-cell.location textarea, .appliance-value-cell.type textarea, .appliance-value-cell.make textarea, .appliance-value-cell.model textarea').forEach(el => {
     el.dispatchEvent(new Event('input'));
@@ -378,21 +377,6 @@ function loadLogo() {
   if (stored) applyLogo(stored);
 }
 
-// ── Work Carried Out truncation indicator (GAS-008/GAS-012) ─────────────────
-function updateWorkCount(textarea) {
-  if (!textarea) return;
-  const counter = document.getElementById('workCharCount');
-  const box = textarea.closest('.work-box');
-  const val = textarea.value;
-  const lines = val.split('\n').length;
-  const chars = val.length;
-  const over = lines > 3 || chars > 220;
-  if (counter) {
-    counter.textContent = over ? `⚠ ${chars} chars / ${lines} lines — may truncate in PDF` : `${chars} chars`;
-    counter.classList.toggle('over', over);
-  }
-  if (box) box.classList.toggle('overflow-warning', over);
-}
 
 // ── Backup / Restore (GAS-002) ───────────────────────────────────────────────
 function exportBackup() {
