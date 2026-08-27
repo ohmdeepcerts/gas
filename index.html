@@ -130,6 +130,7 @@
           <button class="btn-app-secondary" onclick="exportBackup()" title="Download JSON backup">&#128190; Backup</button>
           <button class="btn-app-secondary" onclick="importBackup()" title="Restore from backup">&#128228; Restore</button>
           <button class="btn-app-secondary" onclick="clearAll()">&#128465; Clear</button>
+          <button class="btn-app-secondary" title="Re-apply company name, Gas Safe number, and signature from Settings" onclick="(function(){var s=loadSettings();syncSettingsToForm(s);showToast('Settings applied ✓');})()">&#8635; Settings</button>
           <button class="btn-app-secondary" onclick="saveCurrentAppliancesToHistory('print'); window.print()">&#128424; Print</button>
           <button class="btn-app-primary" id="quickPdfBtn" onclick="downloadVectorPDF(this)">&#11015; Download PDF</button>
         </div>
@@ -151,20 +152,20 @@
             <div class="header-content">
               <div class="top-bar">
                 <div class="top-item">
-                  <label>Cert Date</label>
-                  <input type="text" data-field="cert_date" class="fast-date" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off">
+                  <label for="f_cert_date">Cert Date</label>
+                  <input id="f_cert_date" type="text" data-field="cert_date" class="fast-date" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off">
                 </div>
                 <div class="top-item">
                   <label>Licence No.</label>
                   <input type="text" data-field="landlord_ref" placeholder="Licence No." autocomplete="off">
                 </div>
                 <div class="top-item gas-number-item">
-                  <label>Gas Safe<br>Reg No.</label>
-                  <input type="text" data-field="gas_safe_no" placeholder="000000" maxlength="12" autocomplete="off">
+                  <label for="f_gas_safe_no">Gas Safe<br>Reg No.</label>
+                  <input id="f_gas_safe_no" type="text" data-field="gas_safe_no" placeholder="000000" maxlength="12" autocomplete="off">
                 </div>
                 <div class="top-item wide">
-                  <label>Certificate Ref</label>
-                  <input type="text" data-field="cert_ref" class="auto-reference" readonly tabindex="-1">
+                  <label for="f_cert_ref">Certificate Ref</label>
+                  <input id="f_cert_ref" type="text" data-field="cert_ref" class="auto-reference" readonly tabindex="-1" aria-label="Auto-generated certificate reference">
                 </div>
               </div>
               <div class="title-box">
@@ -243,6 +244,7 @@
               <div class="work-box">
                 <div class="work-box-header">
                   Work Carried Out &amp; Description of Appliances/Equipment Inspected
+                  <span id="workCharCount" class="work-char-count no-print" style="font-size:8px;font-weight:400;opacity:.7;float:right;margin-top:1px"></span>
                 </div>
                 <textarea data-field="work_details" placeholder="Describe inspection, service, and testing carried out&hellip;" oninput="updateWorkCount(this)"></textarea>
               </div>
@@ -269,6 +271,7 @@
                   <div class="sig-field">
                     <label>Signature <span class="sig-tap-hint no-print">(tap to sign)</span></label>
                     <canvas class="sig-canvas" data-sig-field="sig_issued" width="400" height="96" aria-label="Engineer signature pad" style="cursor:pointer" onclick="openSigModal('sig_issued','Engineer Signature')"></canvas>
+                    <button type="button" class="sig-clear-btn no-print" onclick="clearSigCanvas('sig_issued')">Clear</button>
                   </div>
                   <div class="sig-field">
                     <label>Name (CAPITALS)</label>
@@ -280,6 +283,7 @@
                   <div class="sig-field">
                     <label>Signature <span class="sig-tap-hint no-print">(tap to sign)</span></label>
                     <canvas class="sig-canvas" data-sig-field="sig_received" width="400" height="96" aria-label="Recipient signature pad" style="cursor:pointer" onclick="openSigModal('sig_received','Recipient Signature')"></canvas>
+                    <button type="button" class="sig-clear-btn no-print" onclick="clearSigCanvas('sig_received')">Clear</button>
                   </div>
                   <div class="sig-field">
                     <label>Name (CAPITALS)</label>
@@ -333,6 +337,19 @@
           </div>
           <div class="appliance-cards" id="applianceCards"></div>
         </div><!-- /page2 -->
+
+        <!-- Inline appliance history panel (no-print) -->
+        <div class="inline-history-section no-print" id="inlineHistorySection">
+          <button class="inline-history-toggle" id="inlineHistoryToggle" onclick="toggleInlineHistory()" type="button">
+            <span>&#x23F3; Appliance History</span>
+            <span class="iht-sub" id="ihtSub" style="font-weight:400;font-size:10px;opacity:.8"></span>
+            <span class="iht-arrow">&#9660;</span>
+          </button>
+          <div class="inline-history-body" id="inlineHistoryBody">
+            <input class="inline-history-search" id="inlineHistorySearch" type="search" placeholder="Search make, model, type, location&hellip;" oninput="renderInlineHistory(this.value)" autocomplete="off">
+            <div class="inline-history-grid" id="inlineHistoryGrid"></div>
+          </div>
+        </div>
 
       </div><!-- /view-body -->
     </div><!-- /view-new -->
@@ -491,11 +508,11 @@
 </script>
 
 <!-- ── Signature Modal ───────────────────────────────────────────────── -->
-<div id="sigModal" class="sig-modal no-print" role="dialog" aria-modal="true">
+<div id="sigModal" class="sig-modal no-print" role="dialog" aria-modal="true" aria-labelledby="sigModalTitle">
   <div class="sig-modal-box">
     <div class="sig-modal-title" id="sigModalTitle">Signature</div>
     <div class="sig-modal-hint">Draw your signature below</div>
-    <canvas id="sigModalCanvas" width="700" height="220"></canvas>
+    <canvas id="sigModalCanvas" width="700" height="220" aria-label="Signature drawing area"></canvas>
     <div class="sig-modal-actions">
       <button class="btn-app-secondary" onclick="clearSigModal()">&#10005; Clear</button>
       <button class="btn-app-secondary" onclick="closeSigModal()">Cancel</button>

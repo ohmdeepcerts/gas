@@ -214,7 +214,6 @@ const FIELD_DEFAULTS = (() => {
   };
   for (let i = 1; i <= 5; i++) {
     d['defect_' + i]      = 'N/A';
-    d['defect_warn_' + i] = 'N/A';
     // Appliance text defaults
     d[`app${i}_op_pressure`] = '20 mbar';
     d[`app${i}_combustion`]  = 'N/A';
@@ -270,17 +269,24 @@ const AUTOSAVE_PREFIX = 'cp12_v5_';
 function collectFormState() {
   const state = {};
   document.querySelectorAll('[data-field]').forEach(el => {
+    if (el.readOnly) return;
     const key = AUTOSAVE_PREFIX + el.dataset.field;
     state[key] = el.value;
   });
   return state;
 }
 
+let _storageWarned = false;
 function saveForm() {
   const state = collectFormState();
+  let failed = false;
   Object.entries(state).forEach(([k, v]) => {
-    try { localStorage.setItem(k, v); } catch(e) {}
+    try { localStorage.setItem(k, v); } catch(e) { failed = true; }
   });
+  if (failed && !_storageWarned) {
+    _storageWarned = true;
+    showToast('⚠ Auto-save unavailable — download a backup to preserve your work');
+  }
 }
 
 function loadForm() {
@@ -585,10 +591,12 @@ function clearSigCanvas(fieldKey) {
 // ── Signature modal ────────────────────────────────────────────────────────────
 let _sigModalKey = null;
 let _sigModalReady = false;
+let _sigModalPrevFocus = null;
 
 function openSigModal(fieldKey, titleText) {
   _sigModalKey = fieldKey;
   const modal  = document.getElementById('sigModal');
+  _sigModalPrevFocus = document.activeElement;
   const title  = document.getElementById('sigModalTitle');
   const canvas = document.getElementById('sigModalCanvas');
   if (!modal || !canvas) return;
@@ -603,6 +611,10 @@ function openSigModal(fieldKey, titleText) {
   if (title) title.textContent = titleText || 'Signature';
   modal.classList.add('open');
   if (!_sigModalReady) { _initSigModalCanvas(canvas); _sigModalReady = true; }
+  requestAnimationFrame(() => {
+    const firstBtn = modal.querySelector('button');
+    if (firstBtn) firstBtn.focus();
+  });
 }
 
 function _initSigModalCanvas(canvas) {
@@ -645,6 +657,10 @@ function closeSigModal() {
   const modal = document.getElementById('sigModal');
   if (modal) modal.classList.remove('open');
   _sigModalKey = null;
+  if (_sigModalPrevFocus && typeof _sigModalPrevFocus.focus === 'function') {
+    _sigModalPrevFocus.focus();
+    _sigModalPrevFocus = null;
+  }
 }
 
 function confirmSigModal() {
@@ -690,7 +706,7 @@ const APPLIANCE_HISTORY_MAX = 200;
 
 function escapeHistoryHtml(value) {
   if (!value) return '';
-  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function getApplianceHistory() {
@@ -786,6 +802,8 @@ function applyHistoryToCard(record, card) {
   // Refresh choice-cycle buttons that have data-field (hidden inputs)
   card.querySelectorAll('.choice-cycle').forEach(btn => refreshChoiceGroup(btn));
   formDirty = true;
+  card.classList.add('history-target-card');
+  setTimeout(() => card.classList.remove('history-target-card'), 2000);
   showToast('Appliance details filled');
 }
 
@@ -828,6 +846,30 @@ function initApplianceAutocomplete(input, card) {
   input.addEventListener('blur', () => setTimeout(_acHide, 160));
   input.addEventListener('focus', () => {
     if (input.value.trim().length >= 2) input.dispatchEvent(new Event('input'));
+  });
+
+  input.addEventListener('keydown', e => {
+    const dd = _acDropdown;
+    if (!dd || dd.style.display === 'none') return;
+    const items = dd.querySelectorAll('.ac-item');
+    if (!items.length) return;
+    const active = dd.querySelector('.ac-item.ac-focused');
+    let idx = active ? parseInt(active.dataset.idx, 10) : -1;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      idx = Math.min(idx + 1, items.length - 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      idx = Math.max(idx - 1, 0);
+    } else if (e.key === 'Enter' && active) {
+      e.preventDefault();
+      active.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+      return;
+    } else if (e.key === 'Escape') {
+      _acHide();
+      return;
+    } else { return; }
+    items.forEach(it => it.classList.toggle('ac-focused', parseInt(it.dataset.idx, 10) === idx));
   });
 }
 
@@ -921,10 +963,10 @@ function buildSingleApplianceCard(n) {
 
   const cells = [
     { cls: 'number-cell', html: `<div style="display:flex;flex-direction:column;width:100%;height:100%"><input class="appliance-number-input" value="${n}" readonly tabindex="-1" style="flex:1;width:100%"><button type="button" class="app-row-toggle" onclick="toggleAppRow(${n})">— not in use</button></div>` },
-    { cls: 'location',    html:  `<textarea data-field="app${n}_location" placeholder="Location" maxlength="30" rows="2"></textarea>` },
+    { cls: 'location',    html:  `<textarea data-field="app${n}_location" placeholder="Location" maxlength="30"></textarea>` },
     { cls: 'type',        field: `app${n}_type`,        ph: 'Type' },
     { cls: 'make',        field: `app${n}_make`,        ph: 'Manufacturer' },
-    { cls: 'model',       html:  `<textarea data-field="app${n}_model" placeholder="Model" maxlength="30" rows="2"></textarea>` },
+    { cls: 'model',       html:  `<textarea data-field="app${n}_model" placeholder="Model" maxlength="30"></textarea>` },
     { cls: 'choice-cell', choice: `app${n}_ownership`,  opts: 'Yes,No' },
     { cls: 'choice-cell', choice: `app${n}_inspected`,  opts: 'Yes,No' },
     { cls: '',            field: `app${n}_flue_type`,   ph: 'FL' },
@@ -1023,7 +1065,7 @@ function _applyBoilerDefaults(n, row) {
 
   const combEl = row.querySelector(`[data-field="app${n}_combustion"]`);
   if (combEl && (!combEl.value || combEl.value === 'N/A' || /^0\.000[89]$/.test(combEl.value)))
-    combEl.value = isBoiler ? (Math.random() < 0.5 ? '0.0008' : '0.0009') : 'N/A';
+    combEl.value = isBoiler ? '' : 'N/A';
 
   ['visual', 'flue_flow'].forEach(suffix => {
     const btn = row.querySelector(`[data-group="app${n}_${suffix}"]`);
@@ -1056,6 +1098,66 @@ function runExportValidation() {
   }
   if (!warnings.length) return true;
   return confirm('⚠ Before generating PDF:\n\n' + warnings.map((w, i) => (i + 1) + '. ' + w).join('\n\n') + '\n\nProceed anyway?');
+}
+
+// ── Signature clear helper (for sig-clear-btn) ───────────────────────────────
+function clearSigCanvas(fieldKey) {
+  const canvas = document.querySelector(`.sig-canvas[data-sig-field="${fieldKey}"]`);
+  if (!canvas) return;
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  localStorage.removeItem('cp12_v5_' + fieldKey);
+  formDirty = true;
+}
+
+// ── Inline appliance history panel ───────────────────────────────────────────
+function toggleInlineHistory() {
+  const btn  = document.getElementById('inlineHistoryToggle');
+  const body = document.getElementById('inlineHistoryBody');
+  if (!btn || !body) return;
+  const open = body.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  if (open) renderInlineHistory('');
+}
+
+function renderInlineHistory(q) {
+  const grid = document.getElementById('inlineHistoryGrid');
+  const sub  = document.getElementById('ihtSub');
+  if (!grid) return;
+  let records = typeof getApplianceHistory === 'function' ? getApplianceHistory() : [];
+  const total = records.length;
+  if (sub) sub.textContent = total ? `(${total} saved)` : '';
+  if (q && q.trim()) {
+    const lq = q.trim().toLowerCase();
+    records = records.filter(r => [r.make, r.model, r.appType, r.location].some(f => f && f.toLowerCase().includes(lq)));
+  }
+  if (!records.length) {
+    grid.innerHTML = '<div class="ihl-empty">' + (total ? 'No matches.' : 'No appliance history yet.<br>Previous appliances are saved automatically when you download a PDF.') + '</div>';
+    return;
+  }
+  grid.innerHTML = records.slice(0, 24).map((r, i) => {
+    const title = [r.make, r.model].filter(Boolean).join(' ') || 'Unknown appliance';
+    const sub   = [r.appType, r.location].filter(Boolean).join(' · ') || '';
+    const meta  = r.ref ? 'Ref: ' + r.ref : '';
+    return `<div class="ihl-card" onclick="applyInlineHistoryRecord(${i},${JSON.stringify(q||'').replace(/</g,'\\x3c')})" title="Click to apply to next empty appliance card">
+      <div class="ihl-card-title">${escapeHistoryHtml(title)}</div>
+      ${sub ? '<div class="ihl-card-sub">' + escapeHistoryHtml(sub) + '</div>' : ''}
+      ${meta ? '<div class="ihl-card-meta">' + escapeHistoryHtml(meta) + '</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function applyInlineHistoryRecord(idx, q) {
+  let records = typeof getApplianceHistory === 'function' ? getApplianceHistory() : [];
+  if (q && q.trim()) {
+    const lq = q.trim().toLowerCase();
+    records = records.filter(r => [r.make, r.model, r.appType, r.location].some(f => f && f.toLowerCase().includes(lq)));
+  }
+  const record = records[idx];
+  if (!record) return;
+  // Find first active (non-disabled) card
+  const cards = document.querySelectorAll('.appliance-card:not(.is-disabled)');
+  if (!cards.length) { showToast('No active appliance cards available'); return; }
+  applyHistoryToCard(record, cards[0]);
 }
 
 // ── Architecture V2: DOM-mapped vector PDF ─────────────────────────────────────
@@ -1248,7 +1350,7 @@ function drawPageTextFromDom(doc, map, pageEl) {
   });
 
   // Labels and static text
-  pageEl.querySelectorAll('label, .doctitle, .info-box-header, .work-box-header, .sig-inner-title, .attn-head, .p2-title, .p2-ref-label, .p2-head-cell, .defects-box-header, .defects-warn-head th, .pipe-box-header, .remedial-box-header, .co-mini label').forEach(el => {
+  pageEl.querySelectorAll('label, .doctitle, .info-box-header, .work-box-header, .sig-inner-title, .attn-head, .p2-title, .p2-ref-label, .p2-head-cell, .defects-box-header, .defects-warn-head th, .pipe-box-header, .remedial-box-header, .co-mini label, .warn-heading, .defects-heading').forEach(el => {
     if (!isPdfVisible(el)) return;
     drawDomText(doc, map, el, {});
   });
@@ -1293,6 +1395,7 @@ async function downloadVectorPDF(btn) {
   saveForm();
 
   try {
+    if (document.activeElement) document.activeElement.blur();
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
@@ -1307,6 +1410,7 @@ async function downloadVectorPDF(btn) {
     const safeRef = ref.replace(/[^a-z0-9\-_]/gi, '_');
     const safeAddr = addr.replace(/\s+/g, '_');
     doc.save(`CP12_${safeRef}_${safeAddr}.pdf`);
+    formDirty = false;
     showToast('PDF downloaded — saved to archive');
     // Notify app shell to archive this certificate
     if (typeof window.onCertificateExported === 'function') {
@@ -1325,12 +1429,50 @@ document.addEventListener('DOMContentLoaded', () => {
   buildApplianceCards();
   loadForm();
 
+  // Apply engineer signature from settings if no sig is stored yet
+  try {
+    const _s = JSON.parse(localStorage.getItem('cp12_app_settings_v1') || '{}');
+    if (_s.engineer_sig && typeof _applyEngineerSig === 'function') _applyEngineerSig(_s.engineer_sig);
+  } catch(e) {}
+
+  // Resume prompt: show a non-blocking banner if there is meaningful saved data
+  const _skip = new Set(['company_name']);
+  const _hasMeaningfulData = Object.keys(localStorage).some(k => {
+    if (!k.startsWith(AUTOSAVE_PREFIX)) return false;
+    const field = k.slice(AUTOSAVE_PREFIX.length);
+    if (_skip.has(field)) return false;
+    const v = (localStorage.getItem(k) || '').trim();
+    if (!v) return false;
+    return FIELD_DEFAULTS[field] === undefined || v !== String(FIELD_DEFAULTS[field]).trim();
+  });
+  if (_hasMeaningfulData) {
+    const banner = document.createElement('div');
+    banner.id = 'resumeBanner';
+    banner.className = 'resume-banner no-print';
+    banner.innerHTML = '<span>Saved certificate loaded.</span>'
+      + ' <button type="button" class="resume-btn-keep" onclick="document.getElementById(\'resumeBanner\').remove()">Keep it ✓</button>'
+      + ' <button type="button" class="resume-btn-clear" onclick="document.getElementById(\'resumeBanner\').remove();clearAll()">Start fresh</button>';
+    const controls = document.querySelector('.controls');
+    if (controls) controls.insertAdjacentElement('afterend', banner);
+    else document.body.prepend(banner);
+  }
+
   // Fast date inputs
   document.querySelectorAll('.fast-date').forEach(attachFastDateInput);
 
   // Choice cycle buttons
   document.addEventListener('click', e => {
     if (e.target.classList.contains('choice-cycle')) cycleChoice(e.target);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.target.classList.contains('choice-cycle') && (e.key === ' ' || e.key === 'Enter')) {
+      e.preventDefault();
+      cycleChoice(e.target);
+    }
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('sigModal');
+      if (modal && modal.classList.contains('open')) closeSigModal();
+    }
   });
 
   // Auto-save on change
