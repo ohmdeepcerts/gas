@@ -1121,13 +1121,9 @@ function initAutoSizeTextarea(el) {
     const len = el.value.length;
     const tier = TIERS.find(t => len <= t.max) || TIERS[TIERS.length - 1];
     el.style.fontSize = tier.pt + 'pt';
-    // Expand to 2 rows if content wraps, otherwise stay at 1
+    // rows=1 first; if content overflows 1 row expand to 2
     el.rows = 1;
-    const singleH = el.scrollHeight;
-    el.rows = 2;
-    const doubleH = el.scrollHeight;
-    const contentH = el.scrollHeight; // after rows=2
-    el.rows = contentH > singleH ? 2 : 1;
+    el.rows = el.scrollHeight > el.clientHeight ? 2 : 1;
   }
   el.addEventListener('input', update);
   update();
