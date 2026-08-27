@@ -179,8 +179,14 @@
             <div class="info-box">
               <div class="info-box-header">Landlord / Owner / Agent Name &amp; Address</div>
               <div class="info-box-body">
-                <div class="compact-address">
+                <div class="compact-address has-copy-action">
                   <textarea data-field="landlord_address" class="address-main" placeholder="Landlord name&#10;Address&#10;Town" rows="3"></textarea>
+                  <button type="button" class="copy-address-btn no-print" title="Copy from Property Address" onclick="copyInstallationToLandlord(this)">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="5.5" y="1.5" width="9" height="11" rx="1.5"/>
+                      <path d="M10.5 1.5V1a.5.5 0 00-.5-.5H2a1.5 1.5 0 00-1.5 1.5v10A.5.5 0 001 12.5h1"/>
+                    </svg>
+                  </button>
                   <div class="pc-line">
                     <label>Postcode</label>
                     <input type="text" data-field="landlord_postcode" placeholder="SW1A 2AA" autocomplete="off" maxlength="10">
@@ -191,14 +197,8 @@
             <div class="info-box">
               <div class="info-box-header">Installation / Property Address</div>
               <div class="info-box-body">
-                <div class="compact-address has-copy-action">
+                <div class="compact-address">
                   <textarea data-field="install_address" class="address-main" placeholder="Property address&#10;Street&#10;Town" rows="3"></textarea>
-                  <button type="button" class="copy-address-btn no-print" title="Copy to Landlord address" onclick="copyInstallationToLandlord(this)">
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="5.5" y="1.5" width="9" height="11" rx="1.5"/>
-                      <path d="M10.5 1.5V1a.5.5 0 00-.5-.5H2a1.5 1.5 0 00-1.5 1.5v10A.5.5 0 001 12.5h1"/>
-                    </svg>
-                  </button>
                   <div class="pc-line">
                     <label>Postcode</label>
                     <input type="text" data-field="install_postcode" placeholder="SW1A 2AA" autocomplete="off" maxlength="10">

@@ -1290,13 +1290,20 @@ function drawDomText(doc, map, el, opts) {
 
   // Clip text to box
   if (el.tagName === 'TEXTAREA') {
-    const lines = text.split('\n');
+    const rawLines = text.split('\n');
     const lineH = safeFs * 0.4;
-    const maxLines = Math.floor(r.h / lineH);
-    const clipped = lines.slice(0, maxLines);
-    if (clipped.length < lines.length) clipped[clipped.length - 1] = clipped[clipped.length - 1].slice(0, -3) + '...';
-    clipped.forEach((line, i) => {
-      const lineText = doc.splitTextToSize(line, r.w - padding * 2)[0] || '';
+    const maxLines = Math.max(1, Math.floor(r.h / lineH));
+    // Word-wrap each paragraph so long appliance text shows all content
+    const displayLines = [];
+    for (const raw of rawLines) {
+      const segs = doc.splitTextToSize(raw, r.w - padding * 2);
+      for (const seg of segs) {
+        displayLines.push(seg);
+        if (displayLines.length >= maxLines) break;
+      }
+      if (displayLines.length >= maxLines) break;
+    }
+    displayLines.forEach((lineText, i) => {
       doc.text(lineText, textX, r.y + padding + lineH * (i + 0.8), { align });
     });
     return;
