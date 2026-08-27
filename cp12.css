@@ -221,10 +221,10 @@ body {
 .info-box-header {
   background: #1e3a5f;
   color: #fff;
-  font-size: 6.25pt;
+  font-size: 7.5pt;
   font-weight: 700;
   text-transform: uppercase;
-  padding: 3px 7px;
+  padding: 5px 8px;
   letter-spacing: 0.05px;
   line-height: 1;
   white-space: nowrap;
@@ -765,7 +765,7 @@ input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 2px
   #page1 .attention-box .attn-head { font-size: 10pt; padding: 6px 3px; }
   #page1 .attention-box .attn-body { min-height: 105px; padding: 9px 7px; font-size: 7.5pt; }
   #page1 .attention-box .attn-body input { height: 32px; font-size: 13pt; margin-top: 5px; }
-  #page1 .info-box-header { font-size: 6.1pt; padding: 2px 6px; letter-spacing: 0; white-space: nowrap; }
+  #page1 .info-box-header { font-size: 7pt; padding: 4px 7px; letter-spacing: 0; white-space: nowrap; }
   #page1 .info-box-body { padding: 4px 6px 5px; }
   #page1 .compact-address .address-main, #page1 .business-details { height: 67px; min-height: 67px; }
   #page1 .pc-line input, #page1 .compact-contact input { height: 19px; padding: 1px 3px; }
