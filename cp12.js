@@ -1197,237 +1197,7 @@ function applyInlineHistoryRecord(idx, q) {
   applyHistoryToCard(record, cards[0]);
 }
 
-// ── Architecture V2: DOM-mapped vector PDF ─────────────────────────────────────
-function makePdfMapper(pageEl) {
-  const pageRect = pageEl.getBoundingClientRect();
-  const MM_PER_PX = 297 / pageRect.width;
-  return {
-    rect(el) {
-      const r = el.getBoundingClientRect();
-      return {
-        x: (r.left - pageRect.left) * MM_PER_PX,
-        y: (r.top  - pageRect.top)  * MM_PER_PX,
-        w: r.width  * MM_PER_PX,
-        h: r.height * MM_PER_PX,
-      };
-    },
-    mm(px) { return px * MM_PER_PX; },
-  };
-}
-
-function isPdfVisible(el) {
-  if (!el) return false;
-  let cur = el;
-  while (cur && cur !== document.body) {
-    if (cur.classList && cur.classList.contains('no-print')) return false;
-    const st = window.getComputedStyle(cur);
-    if (st.display === 'none' || st.visibility === 'hidden' || parseFloat(st.opacity) === 0) return false;
-    cur = cur.parentElement;
-  }
-  return true;
-}
-
-function getPdfText(el) {
-  if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') return el.value || '';
-  if (el.tagName === 'SELECT') return el.options[el.selectedIndex]?.text || '';
-  let text = '';
-  for (const node of el.childNodes) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      text += node.textContent;
-    } else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('no-print')) {
-      text += getPdfText(node);
-    }
-  }
-  return text;
-}
-
-function drawDomBox(doc, map, el, opts) {
-  if (!isPdfVisible(el)) return;
-  const r = map.rect(el);
-  const o = opts || {};
-  if (o.fill) {
-    doc.setFillColor(o.fill);
-    doc.rect(r.x, r.y, r.w, r.h, 'F');
-  }
-  if (o.border) {
-    doc.setDrawColor(o.border);
-    doc.setLineWidth(o.lineWidth || 0.3);
-    doc.rect(r.x, r.y, r.w, r.h, 'S');
-  }
-  if (o.radius) {
-    doc.setFillColor(o.fill || '#ffffff');
-    doc.roundedRect(r.x, r.y, r.w, r.h, o.radius, o.radius, o.fill ? 'F' : 'S');
-  }
-}
-
-const TEXT_CLIP_PADDING_MM = 0.5;
-
-function drawDomText(doc, map, el, opts) {
-  if (!isPdfVisible(el)) return;
-  const r = map.rect(el);
-  const o = opts || {};
-  const st = window.getComputedStyle(el);
-
-  const text = getPdfText(el).trim();
-  if (!text) return;
-
-  const fontSizePt = parseFloat(st.fontSize) * 0.75 * map.mm(1) * 2.835;
-  const safeFs = Math.max(5, Math.min(fontSizePt, 14));
-  doc.setFontSize(safeFs);
-
-  const bold = st.fontWeight >= 600;
-  const italic = st.fontStyle === 'italic';
-  doc.setFont('helvetica', bold ? (italic ? 'bolditalic' : 'bold') : (italic ? 'italic' : 'normal'));
-
-  const color = st.color.match(/\d+/g) || ['0', '0', '0'];
-  doc.setTextColor(parseInt(color[0]), parseInt(color[1]), parseInt(color[2]));
-
-  const align = o.align || (st.textAlign === 'center' ? 'center' : st.textAlign === 'right' ? 'right' : 'left');
-  const padding = o.padding !== undefined ? o.padding : TEXT_CLIP_PADDING_MM;
-
-  const textX = align === 'center' ? r.x + r.w / 2 : align === 'right' ? r.x + r.w - padding : r.x + padding;
-  const textY = r.y + r.h / 2 + safeFs * 0.18;
-
-  // Clip text to box
-  if (el.tagName === 'TEXTAREA') {
-    const rawLines = text.split('\n');
-    const lineH = safeFs * 0.4;
-    const maxLines = Math.max(1, Math.floor(r.h / lineH));
-    // Word-wrap each paragraph so long appliance text shows all content
-    const displayLines = [];
-    for (const raw of rawLines) {
-      const segs = doc.splitTextToSize(raw, r.w - padding * 2);
-      for (const seg of segs) {
-        displayLines.push(seg);
-        if (displayLines.length >= maxLines) break;
-      }
-      if (displayLines.length >= maxLines) break;
-    }
-    displayLines.forEach((lineText, i) => {
-      doc.text(lineText, textX, r.y + padding + lineH * (i + 0.8), { align });
-    });
-    return;
-  }
-
-  const maxW = r.w - padding * 2;
-  const splitted = doc.splitTextToSize(text, maxW);
-  let display = splitted[0] || '';
-  if (splitted.length > 1) display = display.slice(0, -3) + '...';
-  doc.text(display, textX, textY, { align });
-}
-
-function drawStatusControl(doc, map, el) {
-  if (!isPdfVisible(el)) return;
-  const btn = el.querySelector('.choice-cycle');
-  if (!btn) return;
-  const r = map.rect(el);
-  const val = btn.dataset.current || '';
-  if (!val || val === '—') return;
-  doc.setFontSize(10);
-  const color = val === 'N/A' ? [107, 114, 128] : [30, 58, 95];
-  doc.setTextColor(...color);
-  doc.setFont('helvetica', 'bold');
-  doc.text(val, r.x + r.w / 2, r.y + r.h / 2 + 1.5, { align: 'center' });
-}
-
-function addDomLogo(doc, map, imgEl) {
-  if (!isPdfVisible(imgEl) || !imgEl.src || imgEl.src.startsWith('data:') === false) return;
-  const r = map.rect(imgEl);
-  try {
-    const fmt = imgEl.src.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-    doc.addImage(imgEl.src, fmt, r.x, r.y, r.w, r.h, undefined, 'FAST');
-  } catch(e) {}
-}
-
-function addDomSignature(doc, map, canvas) {
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const px = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-  const hasContent = Array.prototype.some.call(px, (v, i) => i % 4 === 3 && v > 10);
-  if (!hasContent) return;
-  const r = map.rect(canvas);
-  try {
-    doc.addImage(canvas.toDataURL('image/png'), 'PNG', r.x, r.y, r.w, r.h, undefined, 'FAST');
-  } catch(e) {}
-}
-
-function drawPageBoxesFromDom(doc, map, pageEl) {
-  // Background
-  doc.setFillColor('#ffffff');
-  doc.rect(0, 0, 297, 210, 'F');
-
-  // Walk all elements with explicit background or border colours
-  const styled = pageEl.querySelectorAll('[class]');
-  styled.forEach(el => {
-    if (!isPdfVisible(el)) return;
-    const st = window.getComputedStyle(el);
-    const bg = st.backgroundColor;
-    if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-      const c = bg.match(/\d+/g);
-      if (c && !(+c[0] === 255 && +c[1] === 255 && +c[2] === 255)) {
-        const r = map.rect(el);
-        if (r.w < 0.5 || r.h < 0.5) return;
-        doc.setFillColor(+c[0], +c[1], +c[2]);
-        doc.rect(r.x, r.y, r.w, r.h, 'F');
-      }
-    }
-    const border = st.borderTopColor;
-    const bw = parseFloat(st.borderTopWidth);
-    if (bw > 0 && border && border !== 'rgba(0, 0, 0, 0)') {
-      const bc = border.match(/\d+/g);
-      if (bc) {
-        const r = map.rect(el);
-        if (r.w < 0.5 || r.h < 0.5) return;
-        doc.setDrawColor(+bc[0], +bc[1], +bc[2]);
-        doc.setLineWidth(map.mm(bw));
-        doc.rect(r.x, r.y, r.w, r.h, 'S');
-      }
-    }
-  });
-}
-
-function drawPageTextFromDom(doc, map, pageEl) {
-  // Text inputs / textareas
-  pageEl.querySelectorAll('input[data-field]:not([type=file]):not([type=hidden]), textarea[data-field]').forEach(el => {
-    if (!isPdfVisible(el)) return;
-    drawDomText(doc, map, el, {});
-  });
-
-  // Labels and static text
-  pageEl.querySelectorAll('label, .doctitle, .info-box-header, .work-box-header, .sig-inner-title, .attn-head, .p2-title, .p2-ref-label, .p2-head-cell, .defects-box-header, .defects-warn-head th, .pipe-box-header, .remedial-box-header, .co-mini label, .warn-heading, .defects-heading').forEach(el => {
-    if (!isPdfVisible(el)) return;
-    drawDomText(doc, map, el, {});
-  });
-
-  // Choice cycles
-  pageEl.querySelectorAll('.choice-group').forEach(el => {
-    if (!isPdfVisible(el)) return;
-    drawStatusControl(doc, map, el);
-  });
-
-  // Logo
-  const logo = pageEl.querySelector('#logoImg');
-  if (logo && logo.classList && logo.parentElement.classList.contains('has-logo')) {
-    addDomLogo(doc, map, logo);
-  }
-
-  // Signatures
-  pageEl.querySelectorAll('.sig-canvas').forEach(c => {
-    addDomSignature(doc, map, c);
-  });
-
-  // Page footer
-  const footer = pageEl.querySelector('.page-footer');
-  if (footer && isPdfVisible(footer)) drawDomText(doc, map, footer, {});
-}
-
-function renderDomPageVector(doc, pageEl) {
-  const map = makePdfMapper(pageEl);
-  drawPageBoxesFromDom(doc, map, pageEl);
-  drawPageTextFromDom(doc, map, pageEl);
-}
-
-// ── Download vector PDF (GAS-001 fixed — uses local jsPDF) ───────────────────
+// ── Download PDF via html2canvas (pixel-perfect browser render) ───────────────
 async function downloadVectorPDF(btn) {
   if (!runExportValidation()) return;
 
@@ -1440,14 +1210,25 @@ async function downloadVectorPDF(btn) {
 
   try {
     if (document.activeElement) document.activeElement.blur();
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-    const pages = document.querySelectorAll('.page');
-    pages.forEach((pageEl, idx) => {
-      if (idx > 0) doc.addPage('a4', 'landscape');
-      renderDomPageVector(doc, pageEl);
-    });
+    const pages = [...document.querySelectorAll('.page')];
+    for (let i = 0; i < pages.length; i++) {
+      if (i > 0) doc.addPage('a4', 'landscape');
+      const canvas = await html2canvas(pages[i], {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        backgroundColor: '#ffffff',
+        ignoreElements: el => el.classList &&
+          (el.classList.contains('no-print') || el.classList.contains('sig-clear-btn')),
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.93);
+      doc.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+    }
 
     const ref = pdfField('cert_ref') || 'CP12';
     const addr = pdfField('install_address').split('\n')[0].trim().replace(/[^a-z0-9 \-]/gi, '_').slice(0, 40) || 'Certificate';
@@ -1456,7 +1237,6 @@ async function downloadVectorPDF(btn) {
     doc.save(`CP12_${safeRef}_${safeAddr}.pdf`);
     formDirty = false;
     showToast('PDF downloaded — saved to archive');
-    // Notify app shell to archive this certificate
     if (typeof window.onCertificateExported === 'function') {
       window.onCertificateExported(collectFormState());
     }
