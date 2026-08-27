@@ -1118,12 +1118,20 @@ function initAutoSizeTextarea(el) {
     { max: Infinity, pt: 7.0 },
   ];
   function update() {
-    const len = el.value.length;
-    const tier = TIERS.find(t => len <= t.max) || TIERS[TIERS.length - 1];
+    const tier = TIERS.find(t => el.value.length <= t.max) || TIERS[TIERS.length - 1];
     el.style.fontSize = tier.pt + 'pt';
-    // rows=1 first; if content overflows 1 row expand to 2
+    // Expand to rows=2 if content wraps
     el.rows = 1;
     el.rows = el.scrollHeight > el.clientHeight ? 2 : 1;
+    // If rows=2 still overflows, trim characters until it fits (3rd line prevention)
+    if (el.rows === 2 && el.scrollHeight > el.clientHeight) {
+      while (el.scrollHeight > el.clientHeight && el.value.length > 0) {
+        el.value = el.value.slice(0, -1);
+      }
+      // Re-apply tier after trim
+      const newTier = TIERS.find(t => el.value.length <= t.max) || TIERS[TIERS.length - 1];
+      el.style.fontSize = newTier.pt + 'pt';
+    }
   }
   el.addEventListener('input', update);
   update();
