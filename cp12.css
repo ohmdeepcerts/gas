@@ -471,6 +471,7 @@ body {
 .choice-cycle[data-current="Pass"] { color: #111827; border-color: #9ca3af; font-size: 7pt; font-weight: 700; }
 .choice-cycle[data-current="Fail"] { color: #111827; border-color: #9ca3af; font-size: 7pt; font-weight: 700; }
 .pipe-choice .choice-cycle { min-width: 34px; }
+.warn-cycle { min-width: 44px; width: 44px; height: 19px; line-height: 17px; font-size: 7pt; padding: 0 4px; }
 
 @media print {
   .choice-group { gap: 0; }

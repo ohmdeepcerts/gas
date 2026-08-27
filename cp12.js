@@ -214,6 +214,7 @@ const FIELD_DEFAULTS = (() => {
   };
   for (let i = 1; i <= 5; i++) {
     d['defect_' + i]      = 'N/A';
+    d['defect_warn_' + i] = 'N/A';
     // Appliance text defaults
     d[`app${i}_op_pressure`] = '20 mbar';
     d[`app${i}_combustion`]  = 'N/A';
