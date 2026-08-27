@@ -1209,6 +1209,9 @@ async function downloadVectorPDF(btn) {
   saveCurrentAppliancesToHistory('pdf');
   saveForm();
 
+  const viewBody = document.querySelector('#view-new .view-body');
+  const origScroll = viewBody ? viewBody.scrollTop : 0;
+
   try {
     if (document.activeElement) document.activeElement.blur();
 
@@ -1218,17 +1221,26 @@ async function downloadVectorPDF(btn) {
     const pages = [...document.querySelectorAll('.page')];
     for (let i = 0; i < pages.length; i++) {
       if (i > 0) doc.addPage('a4', 'landscape');
+
+      // Scroll the page into view so html2canvas gets correct positions
+      if (viewBody) viewBody.scrollTop = pages[i].offsetTop;
+      await new Promise(r => setTimeout(r, 80));
+
       const canvas = await html2canvas(pages[i], {
         scale: 2,
         useCORS: true,
         allowTaint: false,
         logging: false,
         backgroundColor: '#ffffff',
-        ignoreElements: el => el.classList &&
-          (el.classList.contains('no-print') || el.classList.contains('sig-clear-btn')),
+        onclone: (clonedDoc) => {
+          // Remove UI-only elements from clone so they don't appear in PDF
+          const hide = ['.no-print', '.app-row-toggle', '.sig-clear-btn', '.ac-dropdown',
+                        '.inline-history-section', '.resume-banner'];
+          hide.forEach(sel => clonedDoc.querySelectorAll(sel).forEach(el => { el.style.display = 'none'; }));
+        },
       });
-      const imgData = canvas.toDataURL('image/jpeg', 0.93);
-      doc.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+
+      doc.addImage(canvas.toDataURL('image/jpeg', 0.93), 'JPEG', 0, 0, 297, 210);
     }
 
     const ref = pdfField('cert_ref') || 'CP12';
@@ -1245,6 +1257,7 @@ async function downloadVectorPDF(btn) {
     console.error('PDF error:', e);
     alert('PDF generation failed: ' + (e.message || e));
   } finally {
+    if (viewBody) viewBody.scrollTop = origScroll;
     if (btn) { btn.disabled = false; btn.textContent = '⬇ Download PDF'; }
   }
 }

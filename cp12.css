@@ -77,9 +77,10 @@ body {
 }
 .logo-zone img {
   display: none;
-  width: 100%;
-  height: 54px;
-  object-fit: contain;
+  max-width: 100%;
+  max-height: 54px;
+  width: auto;
+  height: auto;
 }
 .logo-zone.has-logo img { display: block; }
 .logo-placeholder {
@@ -195,7 +196,7 @@ body {
 }
 @media print {
   #page1 .merged-header { min-height: 80px; margin-bottom: 3px; }
-  #page1 .logo-zone img { height: 62px; }
+  #page1 .logo-zone img { max-height: 62px; max-width: 100%; width: auto; height: auto; }
   #page1 .logo-placeholder { display: none !important; }
   #page1 .top-bar { padding: 1px 4px; gap: 3px; }
   #page1 .top-item input, #page1 .top-item.wide input { height: 16px; }
